@@ -1,0 +1,35 @@
+dim TmpVal1, SecSize, ChkRdErr,LoopCnt,LbaCnt,dataVal
+
+   NVM_CMD_NSID = 1
+   cmdto = 600
+   NVM_FMT_NVM 1, 0, 0, 0, 0;
+   if (Code) prnf "\nFormat Failed" else prnf "\nFormat NVM Device...  " endif
+   cmdto = 8
+
+ChkRdErr = 0
+TmpVal1= 8
+SecSize = 0FDh
+for (LoopCnt=0;LoopCnt<2;LoopCnt+=1)
+   for (LbaCnt=0; LbaCnt<totallba-0FDh; LbaCnt+=0FDh)
+      zero
+      nvm_read LbaCnt, SecSize
+      i = 0h
+      do
+         RPOINT = i
+         RR dataVal
+         if (dataVal != 0)
+            prnf "\nRead Command Error"
+            goto TestEnda
+            ChkRdErr = 1
+         endif    
+         i+=1
+      until (i == 200h)
+  
+   endfor
+endfor
+TestEnda:
+if (ChkRdErr == 1)
+   prnf "\n Disk not clear"
+endif
+
+   NVM_CMD_NSID = 0
