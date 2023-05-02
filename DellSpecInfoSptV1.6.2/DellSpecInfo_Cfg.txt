@@ -1,0 +1,113 @@
+//----------------------------------------------------------------
+//-  Copyright (c) ULINK Techology, Inc. 
+//-  Config TXT - DellSpecInfo_cfg.txt         Rev. 1.6.2
+//-              (for DM V6.0 and above) 
+//-  Description - Configuration file for individual scripts	
+//----------------------------------------------------------------
+
+DellSmartSup = 1      //Support Dell SMART Get Log command (0CAh); 0=No;1=Yes
+DellSmartSpec[0] = 50 //Re-Assigned Sector Count; 0=NA
+DellSmartSpec[1] = 0  //Program Fail Count (Worst Case Component); 0=NA
+DellSmartSpec[2] = 90 //Program Fail Count (SSD Total); 0=NA
+DellSmartSpec[3] = 0  //Erase Fail Count (Worst Case Component); 0=NA
+DellSmartSpec[4] = 90 //Erase Fail Count (SSD Total); 0=NA
+DellSmartSpec[5] = 90 //Wear Leveling Count; 0=NA
+DellSmartSpec[6] = 0  //Used Reserved Block Count (Worst Case Component); 0=NA
+DellSmartSpec[7] = 50 //Used Reserved Block Count (SSD Total); 0=NA
+DellSmartSpec[8] = 0  //Reserved Block Count (SSD Total); 0=NA
+DellSmartSpec[9] = 0  //Minimum Temperature; 0=NA
+DellSmartSpec[10] = 0  //Maximum Temperature; 0=NA
+DellSmartSpec[11] = 0  //Total Data Written by the Controller to the NAND; 0=NA
+DellSmartSpec[12] = 0  //Accumulated host Active Idle Counter; 0=NA
+DellSmartSpec[13] = 0  //Accumulated NonOperational Power State Counter; 0=NA
+DellSmartSpec[14] = 0  //Abnormal Input Vcc Voltage Counter; 0=NA
+DellTCGSpec[0] = 1    //Support TCG Security supported; 0=No;1=Yes;2=NA
+DellNVMCmdSetM[0] = 1 //Support Dataset Management; 0=No;1=Yes;2=NA
+DellNVMCmdSetM[1] = 1 //Support Security Send; 0=No;1=Yes;2=NA
+DellNVMCmdSetM[2] = 1 //Support Security Receive; 0=No;1=Yes;2=NA
+DellNVMCmdSetM[3] = 1 //Support Device Self-Test; 0=No;1=Yes;2=NA
+DellNVMCmdSetM[4] = 1 //Support Compare; 0=No;1=Yes;2=NA
+DellNVMCmdSetM[5] = 1 //Support Verify; 0=No;1=Yes;2=NA
+DellNVMCmdSetO[0] = 2 //Support Reservation Register; 0=No;1=Yes;2=NA
+DellNVMCmdSetO[1] = 2 //Support Reservation Reprot; 0=No;1=Yes;2=NA
+DellNVMCmdSetO[2] = 2 //Support Reservation Acquire; 0=No;1=Yes;2=NA
+DellNVMCmdSetO[3] = 2 //Support Reservation Release; 0=No;1=Yes;2=NA
+DellNVMCmdSetO[4] = 2 //Support Write Zeroes; 0=No;1=Yes;2=NA
+DellNVMCmdSetO[5] = 2 //Support Write Uncorrectable; 0=No;1=Yes;2=NA
+DellFWDownL = 1       //Support FW Image Download; 0=No;1=Yes;2=NA
+DellNSSup = 1         //Support Namespaces; 0=No;1=Yes;2=NA
+DellNSDefault = 1     //Namespaces Numver
+DellASPMSUP = 1       //Support Active State Power Management; 0=No;1=Yes
+DellASPMDefault = 0   //Active State Power Management Default; 0=Disable;1=Enable
+DellAPSTSUP = 1       //Support Autonomous Power State Transition Attributes; 0=No;1=Yes
+DellAPSTDefault = 0   //Autonomous Power State Transition Attributes Default; 0=Disable;1=Enable
+DellFPSUP = 1         //Support Feature Persistence; 0=No;1=Yes
+DellFPDefault = 1     //Feature Persistence Default; 0=Disable;1=Enable
+DellCESUP = 1         //Support Cryptographic Erase; 0=No;1=Yes
+DellCEDefault = 1     //Cryptographic Erase Default; 0=Disable;1=Enable
+DellSESUP = 1         //Support Secure Erase; 0=No;1=Yes
+DellSEDefault = 1     //Secure Erase Default; 0=Disable;1=Enable
+DellLLFSUP = 1        //Support Low Level Format; 0=No;1=Yes
+DellLLFDefault = 1    //Secure Low Level Format Default; 0=Disable;1=Enable
+DellBESSUP = 1        //Support Block Erase sanitize; 0=No;1=Yes
+DellBESDefault = 1    //Block Erase sanitize Default; 0=Disable;1=Enable
+DellCESSUP = 1        //Support Crypto Erase sanitize; 0=No;1=Yes
+DellCESDefault = 1    //Crypto Erase sanitize Default; 0=Disable;1=Enable
+DellOSSUP = 0         //Support Overwrite sanitize; 0=No;1=Yes
+DellOSDefault = 0     //Overwrite sanitize Default; 0=Disable;1=Enable
+DellTTSUP = 1         //Support Temperature Threshold; 0=No;1=Yes
+DellTTDefault = 1     //Temperature Threshold Default; 0=Disable;1=Enable
+DellAECSUP = 1        //Support Asynchronous Event Configuration; 0=No;1=Yes
+DellAECDefault = 1    //Asynchronous Event Configuration Default; 0=Disable;1=Enable
+DellVWCSUP = 1        //Support Volatile Write Cache; 0=No;1=Yes
+DellVWCDefault = 1    //Volatile Write Cache Default; 0=Disable;1=Enable
+DellEDPSUP = 2        //Support End-to-end Data Protection; 0=No;1=Yes;2=NR
+DellEDPDefault = 0    //End-to-end Data Protection Default; 0=Disable;1=Enable
+DellResSUP = 2        //Support Reservations; 0=No;1=Yes;2=NR
+DellResDefault = 0    //Reservations Default; 0=Disable;1=Enable
+DellHMBSUP = 0        //Support Host Memory Buffer; 0=Optional;1=Yes
+DellHMBDefault = 0    //Host Memory Buffer Default; 0=Disable;1=Enable
+DellRPMBSUP = 1       //Support Replay Protected Memory Block; 0=No;1=Yes
+DellRPMBDefault = 1   //Replay Protected Memory Block Default; 0=Disable;1=Enable
+DellBPSUP = 1         //Support Boot Partitions; 0=No;1=Yes
+DellBPDefault = 1     //Boot Partitions Default; 0=Disable;1=Enable
+DellNMSUP = 2         //Support Namespace Management; 0=No;1=Yes;2=NR
+DellNMDefault = 0     //Namespace Management Default; 0=Disable;1=Enable
+DellHCTMSUP = 1       //Support Host Controlled Thermal Management; 0=No;1=Yes
+DellHCTMDefault = 1   //Host Controlled Thermal Management Default; 0=Disable;1=Enable
+DellNOPSSUP = 1       //Support Non-Operational Power State Config; 0=No;1=Optional
+DellNOPSDefault = 1   //Non-Operational Power State Config Default; 0=Disable;1=Enable
+DellPersistentSUP = 1       //Support Non-Operational Power State Config; 0=No;1=Yes
+DellPersistentDefault = 1   //Non-Operational Power State Config Default; 0=Disable;1=Enable
+DellPersistenceLogSUP[3] = 1 //Timestamp Change Event Support; 0=No;1=Yes
+DellPersistenceLogSUP[7] = 1 //Format NVM Start Event Support; 0=No;1=Yes
+DellPersistenceLogSUP[8] = 1 //Format NVM Completion Even Support; 0=No;1=Yes
+DellPersistenceLogSUP[9] = 1 //Sanitize Start Event Support; 0=No;1=Yes
+DellPersistenceLogSUP[10] = 1 //Sanitize Completion Event Support; 0=No;1=Yes
+DellPersistenceLogSUP[13] = 1 //Thermal Excursion Event Support; 0=No;1=Yes
+
+DellPersistence[0] = 0 //Arbitration Persistence; 0=No;1=Yes
+DellPersistence[1] = 0 //Power Management Persistence; 0=No;1=Yes
+DellPersistence[2] = 1 //Number of LBA Ranges Persistence; 0=No;1=Yes
+DellPersistence[3] = 0 //Over Temp Threshold Persistence; 0=No;1=Yes
+DellPersistence[4] = 0 //Error Recovery Persistence; 0=No;1=Yes
+DellPersistence[5] = 0 //Volatile Write Cach Persistence; 0=No;1=Yes
+DellPersistence[6] = 0 //Number of Queues Persistence; 0=No;1=Yes
+DellPersistence[7] = 0 //Interrupt Coalescing Persistence; 0=No;1=Yes
+DellPersistence[8] = 0 //Interrupt Vector Config Persistence; 0=No;1=Yes
+DellPersistence[9] = 0 //Write Atomicity Normal Persistence; 0=No;1=Yes
+DellPersistence[10] = 0 //Async Event Config Persistence; 0=No;1=Yes
+DellPersistence[11] = 0 //Autonomous Power State Persistence; 0=No;1=Yes
+DellPersistence[12] = 0 //Host Memory Buffer Persistence; 0=No;1=Yes
+DellPersistence[13] = 1 //HD-DITM Persistence; 0=No;1=Yes
+DellPersistence[14] = 1 //SCP Persistence; 0=No;1=Yes
+DellPersistence[15] = 1 //HCTM; 0=No;1=Yes
+DellMPSMIN = 0          //Memory Page Size Minimum (MPSMIN)
+DellFLBAS = 0           //Formatted LBA Size (FLBAS)
+DellTCGBlockSID = 1     //Block SID support; 0=No;1=Yes
+DellSQNum = 8           //I/O Submission Queues number
+DellCQNum = 8           //I/O Completion Queues number
+DellPSIDSup = 1         //Support PSID; 0=No;1=Yes
+DellSEDSpt = 2          //Support SED; 0=No;1=Yes;2=NA
+DellMT1 = 81            //MT1 vaule
+DellMT2 = 83            //MT1 vaule

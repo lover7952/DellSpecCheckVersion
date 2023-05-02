@@ -1,0 +1,6420 @@
+dim HBAVer, Datavalue[5000], Effdata[5000], EffOffset, ACS[300], IOCS[300], DSTSUP, DMSUP, SSSUP, SRSUP, MandatoryCmdVal[5], LLF, DellLLFSUP, DellLLFDefault
+dim CMPSUP, RESREGSUP, RESREPSUP, RESACQSUP, RESRELSUP, WZSUP, WUSUP, FWID, idata[100],RBC, CriticalWarning[5], IDFYValue, IDFYValue1
+dim FWSlotOffset, FWSlotdata[100], AFIRun, AFIGo, FRS[50], Data[30], MPSIMIN, LBADS[20],SmartOffset, Smartdata[1000], SptChk[20]
+dim NN, CurrentNCQA, CurrentNSQA, ASPMSUP, ASPM, CurrentAPSTE, ONCS, SE, CE, OverES, BlockES,CryptoES, TempInfo, CurrentSHCW, strFileName
+dim CurrentDN, Resersupport, CurrentEHM, CurrentHSIZE, RPMBS, BootPar, NSMgt, HCTM, CurrentNOPPME, ePPIDVal[50000], TempTest, SEDSpt, ASPMSpt
+dim DellSmartSpec[100],DellTCGSpec[5],DUTTCGSpec[10], DellNVMCmdSetM[10],DellNVMCmdSetO[10],DellFWDownL, ePPIDEnd, ePPIDChk, ePPIDChk2
+dim DellNSSup,DellNSDefault,DellASPMSUP, DellASPMDefault, DellAPSTSUP, DellAPSTDefault, DellFPSUP, DellFPDefault,TempVal[5], GUIDVal[100]
+dim DellCESUP, DellCEDefault, DellSESUP, DellSEDefault, DellBESSUP, DellBESDefault, DellCESSUP, DellCESDefault,MT2Val,MTChk
+dim DellOSSUP, DellOSDefault, DellTTSUP, DellTTDefault, DellAECSUP, DellAECDefault, DellVWCSUP, DellVWCDefault,MT1Val,MT1Current,MT2Current
+dim DellEDPSUP, DellEDPDefault, DellResSUP, DellResDefault, DellHMBSUP, DellHMBDefault, DellRPMBSUP, DellRPMBDefault, ChkPers, GUID[10]
+dim DellBPSUP, DellBPDefault, DellNMSUP, DellNMDefault, DellHCTMSUP, DellHCTMDefault, DellNOPSSUP, DellNOPSDefault, MTResult[5]
+dim DellPersistence[20], DellSmartSup, DellMPSMIN, DellFLBAS, ErrCnt, DellTCGBlockSID, DellSQNum, DellCQNum, DellPSIDSup, DellFeaM
+dim ASPML12Spt, ASPML11Spt, ASPML1Spt, HMB, NOPSSpt, LevelASPMSpt, ASPML12En, ASPMEn, DellSEDSpt, ASPML11En, E2EInfo, UnderThre, OverThre
+dim ComponentIDVal[10], ComponentIDChk, ComponentIDEnd, CsvCheckPoint[30000]
+dim FWerror[2], SecurityCheck, HCTM1Val, HCTM2Val, SecSize, dataVal, ChkRdErr, SmartPwdata[20], PwOnHr
+dim TestSuiteName, SrtRevNum, LogPath, csvFile, VenLicense, DeviceName, TestGroupName, RootFolder, SrcFile, DstFile, RunTime, RunTm, TmpNSID
+dim PELvalue[1000], SMARTLogSnapshot, FWComEvnet, TTChangeEvent, PwOnResetEvent, NVMSubHWErEvent, FWUGVal
+dim ChangeNSEvent, FmtNVMStartEvent, FmtNVMComEvent, StizeStartEvent, StizeComEvent, SFEvent, TelLogCreateEvent
+dim TheExcurEvent, VSEvent, SptEventBitmap, PersistentSpt, DellPersistentDefault, DellPersistentSUP, DellPersistenceLogSUP[100]
+dim PersistentFMT[100], PersistentNSID, PersistentFMTCDW, PersistentStaF, PersistentSANICAP, PersistentSANCDW10, PersistentSANCDW11
+dim PersistentTime, PersistentMill, DellMT1, DellMT2, checkGen, bootszie, bootSpt, MNTMT, MXTMT, DegressMNTMT, DegressMXTMT
+dim TestReportName, TestCaseName, TestSwName, TestSwVer, TmpNSID1, iftype, rellogpath, ostype, osver, TotDataW, ShortInfo, HAIC, ANOPSC
+
+
+include "tcg_psidspt_a.ens"
+include "DellSpecInfo_cfg.txt"
+
+
+cls
+halterr off
+upd on
+echo off
+logoff
+turbo on
+vernum = 9011700h
+
+   TestCaseName="DellSpecCheck"
+   TestReportName = "Check Dell Spec"
+   TestGroupName = "Chk_Info"
+   TestSwName = "DM9"
+   TestSwVer = "Version 1.0"
+   OsVer = "Windows 10"
+   TestSuiteName = "DellSpecInfo"
+   SrtRevNum = " Script REV 1.6.2"
+   VenLicense = "by ULINK"
+   RootFolder = "C:\DMTest\"
+   RunTime = microsecond
+   SecSize=512
+
+   LogOff
+   IfType="NVMe"
+   TmpNSID1 = NVM_CMD_NSID; NVM_CMD_NSID=0; NVM_IDFY_CTRLR; NVM_CMD_NSID=TmpNSID1
+   NVM_IDFY_NS
+
+   g0=devmn+"_"+devsn
+   g1=""
+   str_len g0,g2
+   for (i=0;i<g2;i+=1)
+      str_get g0,i,v0
+      getascii_r v0,v1
+      if(v1!=20h) 
+         g1+=v0 
+      endif
+   endfor
+   DeviceName=g1
+
+   g0 = RootFolder
+   g1 = g0+"tmp.log"
+   log/o g1
+   DELFILE g1
+
+   g0 = g0+"Rgs\"
+   g1 = g0+"tmp.log"
+   log/o g1
+   DELFILE g1
+
+   g3 = g0+"Log\"
+   g1 = g3+"tmp.log"
+   log/o g1
+   DELFILE g1
+
+   for(j0 = 1; j0 < 1000; j0+=1)
+      itoa j0,10,4
+      CsvFile = RootFolder+TestGroupName+"\Csv\"+TestSuiteName+"_"+DeviceName+"_"+itoa+".csv"
+      RDFILESIZE CsvFile
+      if(code == 711) goto exitLogname; endif
+   endfor
+   exitLogname:
+   log CsvFile
+   if(j0==1000)
+      Msgbox "Important Note: Please delete some log files!", "Otherwise, '.csv' && the path of '.log' ending with '_000' will be overwritten!", 1, 0
+   endif
+   LogPath = RootFolder+TestGroupName+"\Log\"+TestSuiteName+"_"+DeviceName+"_"+itoa+"\"
+   RelLogPath = "..\Log\"+TestSuiteName+"_"+DeviceName+"_"+itoa+"\"
+
+   SrcFile = LogPath + "LogHead.log"
+   log SrcFile
+   DstFile = LogPath + "LogHead.Tmp"
+   DelFile SrcFile
+
+   g0=verstr
+   OsType=""
+   TestSwVer=""
+   g4=0
+   str_len g0,g2
+   for (i=12;((i<g2)&(g4<1));i+=1)
+      str_get g0,i,v0
+      getascii_r v0,v1
+      //TestSwName+=v0
+      if(v1==29h) 
+         g4+=1 
+      endif
+   endfor
+   i+=2
+   i1=i+3
+   for (;((i<g2)&(i<i1));i+=1)
+      str_get g0,i,v0
+      getascii_r v0,v1
+      OsType+=v0
+   endfor
+   i+=10
+   i1=i+8
+   for (;((i<g2)&(i<i1));i+=1)
+      str_get g0,i,v0
+      getascii_r v0,v1
+      TestSwVer+=v0
+   endfor   
+   prnf "\nTest Report:, "; prnsr TestReportName
+   prnf "\nTest Suite:, "; prnsr TestSuiteName
+   prnf "\nTest Suite Version:, "; prnsr SrtRevNum
+   prnf "\nLicense By:, "; prnsr VenLicense
+   prnf "\nTest Software:, "; prnsr TestSwName
+   prnf "\nTest Software Version:, "; prnsr TestSwVer
+   prnf "\nIF Type:, "; prnsr IfType
+   prnf "\nModel Number:, ";  prns DevModel
+   prnf "\nSerial Number:, ";  prns DevSerial
+   prnf "\nFW Revision:, "; prns DevFWVer
+   prnf "\nTotal LBA:, %I64u", totallba; prnf " (0x%I64X)", totallba
+   prnf "\nCapacity:, %u", totallba*SecSize/1000000000; prnf ".%03u G", (totallba*SecSize/1000000)%1000
+   prnf "\nLog File:, "; prnsr RelLogPath
+   prnf "\nHBA Name:, "; HBAName
+   prnf "\nOS Type:, "; prnsr OsType
+   prnf "\nOS Version:, "; prnsr OsVer
+   prnf "\nCopyright:, Copyright @Company 2019"
+   prnf "\nStart ";date; time
+   prns " "
+   log/o csvFile
+
+   cls         // clear log
+   prnsr "============================= ("; prnsr TestSuiteName; prnsr " ";prnsr SrtRevNum; prnsr " ";prnsr "License "; prnsr VenLicense; prns ") =============================="
+   SrcFile = LogPath + "LogHead.log"
+   log SrcFile
+   DstFile = LogPath + "LogHead.Tmp"
+   DelFile SrcFile
+
+   script; ver; hbaname; devname; date;
+   prnsr "============================= ("; prnsr TestSuiteName; prnsr " ";prnsr SrtRevNum; prnsr " ";prnsr "License "; prnsr VenLicense; prns ") =============================="
+   prns ""
+   prnsr "Script Start "; time
+   prns ""
+
+
+if (ver < vernum)
+   prns ""
+   prns ""
+   prns " ************* Dell Spec Check TEST WARNING *************"
+   prnf " * THE CURRENT VERSION OF DRIVEMASTER (%X.", (VER>>24)&0FFh; prnf "%X.", (VER>>16)&0FFh; prnf "%X)        *\n", VER&0FFFFh
+   prnf " * IS NOT THE REQUIRED VERSION (%X.", (verNum>>24)&0FFh; prnf "%X.", (verNum>>16)&0FFh; prnf "%X)               *\n", verNum&0FFFFh
+   prns " * You need DM V9.1 and above to test                   *"
+   prns " ********************************************************"
+   prns ""
+   prns " ***** DM Version not support, The Test STOP *****"
+   goto Endtest
+endif
+
+   prnf "*** Check Dell Spec"; prnsr SrtRevNum; prnf " (Copyright @ 2022 by ULINK Technology, All Right Reserved)***"
+   prns ""
+   prns ""
+   prns "\n  Set the Saved Spec value based on the inputs or the DellSpecInfo_CFG.TXT"
+   prns ""
+   prns "* Test Case 1: Dell IDFY Checking"
+   prns "* Test Case 2: Dell SMART Attribute Table"
+   prns "* Test Case 3: Dell Security Support"
+   prns "* Test Case 4: Dell NVMe Command Set (Mandatory)"
+   prns "* Test Case 5: Dell NVMe Command Set (Optional)"
+   prns "* Test Case 6: Dell Firmware Slot Information"
+   prns "* Test Case 7: Dell NVMe Feature Requirements Table"
+   prns "* Test Case 8: Dell Feature Persistence Table"
+   prns "* Test Case 9: Dell NVMe Controller Registers Settings"
+   prns "* Test Case 10: Dell Test Persistence Command Status (Save=1)"
+   prns "* Test Case 11: Dell HD-DITM Temperature Settings (+-2C)"
+   prns ""
+   prnf "\n "
+   prnf "\nTest Configuration"
+   prnf "\n  "
+   strFileName=srtpath+"\DellSpecInfo_Cfg.txt"
+   Rbfile strFileName,"Read"
+   RdFileSize strFileName
+   rpoint=0;rep Fsize (rr g0;if(g0==0ah) prnf "\n  " endif;prnf "%c",g0;rpoint+=1);prnf "\n"
+   prnf "\n "
+   prns ""
+   //prnf " Power Cycle..."
+   //pwof; wait 5000; pwon; wait 5000;
+   //pinit
+   //if(code == 0) disableHBA; endif
+   nvm_idfy
+   prns ""
+   prns ""
+
+Timer3=0
+ErrCnt=0
+prns ""
+prns ""
+prnf "\n Test Case 1: Dell IDFY Checking"
+prnf "\n                                       Value                     Dell Spec         Result"
+prnf "\n ==========================================================================================="
+nvm_cmd_nsid = 0
+nvm_idfy
+copy "readA","read"
+rpoint=3072; rr i1;
+i = 0
+for (rpoint=3072;rpoint<(3072+32);rpoint+=1)
+   rr i1
+   ePPIDVal[i] = i1
+   i+=1
+endfor
+ePPIDEnd = i
+i = 0
+ePPIDChk = 0
+prns ""
+prnf "\n  DELL ePPID                 : "
+do
+   if (ePPIDVal[i] == 32)
+      prnf "*"
+   elseif (ePPIDVal[i] == 0)
+      prnf "_"
+   else
+      prnf "%C", ePPIDVal[i]
+   endif
+   i+=1
+until (i == ePPIDEnd)
+i = 0
+do 
+   if (ePPIDVal[i] == 32)
+      ePPIDChk2 = i
+      if (ePPIDChk2 < 3)
+         ePPIDChk2 = 3
+      endif
+      goto ePPIDCheckEnd
+   endif
+   i+=1
+until (i == ePPIDEnd)
+ePPIDCheckEnd:
+prnf "  ASCII Characters"
+
+if (ePPIDVal[ePPIDChk] == 0)
+   CsvCheckPoint[11] = 0
+   prnf "  Fail***"
+   ErrCnt+=1
+   prnf "\n      +++++ Fail: Devive Not Support Dell Spec"
+elseif (ePPIDVal[ePPIDChk2-3] == 88 || ePPIDVal[ePPIDChk2-3] == 65 )
+   CsvCheckPoint[11] = 1
+   prnf "  Pass"
+else
+   CsvCheckPoint[11] = 0
+   prnf "  Fail***"
+   prnf "\n      +++++ Fail: Last 3rd Character should be 'X' or 'A'"
+   ErrCnt+=1
+endif
+prnf "\n  Note: '*' stands for space character (20h), '_' stands for null character (00h)"
+prnf "\n"
+prnf "\n"
+
+prnf "\n  DELL Nominal Form Factor   : "
+rrw i1
+if (i1==0) prnf "Nominal form factor not reported"; prnf " (%4.4Xh)",i1 ; prnf "            Info"
+   elseif (i1 == 1) prnf "2.5 inch nominal form factor"; prnf " (%4.4Xh)",i1 ; prnf "                Info"
+   elseif (i1 == 2) prnf "M.2"; prnf " (%4.4Xh)",i1 ; prnf "                                         Info"
+   elseif (i1 == 3) prnf "HHHL"; prnf " (%4.4Xh)",i1 ; prnf "                                        Info"
+endif
+prnf "\n  DELL Device Catogory       : "
+rpoint=3106
+rrw i1
+i=i1&3h
+i3 = i1>>2&01h
+
+if (i3 == 0) prnf "Standard (IDFY 3106; Bit 2=0)"
+else prnf "Consumer (IDFY 3106; Bit 2=1)"
+endif
+
+prnf "\n                             : "
+if (i == 0) 
+   prnf "Best In Class (Class 40)"
+   checkGen = 0
+elseif (i == 1) 
+   prnf "Mainstream (Class 35)   "
+   checkGen = 1
+elseif (i == 2) 
+   prnf "Reserved                "
+   checkGen = 2
+elseif (i == 3)
+   prnf "Value (Class 25)        "
+   checkGen = 3
+endif
+i=(i1>>13)&3h
+
+if (i == 0)
+   prnf ", Storage Device"; prnf " (%4.4Xh)",i1;
+   CsvCheckPoint[12] = 1
+   prnf "    Pass"
+elseif (i == 1)
+   prnf ", Fast Memory Accelerator (2 device)"; prnf " (%4.4Xh)",i1;
+   if (i3 == 1 )
+      CsvCheckPoint[12] = 0
+      prnf " Fail***"
+      prnf "\n      +++++ Fail: Should be Mainstream for Consumer SSD"
+   else
+      CsvCheckPoint[12] = 1
+      prnf " Pass"
+   endif
+endif
+
+i3 = i1>>3&01h
+prnf "\n                             : "
+if (i3 == 0)
+   prnf "PCIe Gen3 (IDFY 3106; Bit 4:3=00b)"
+   if (checkGen == 0 && i == 0)
+      CsvCheckPoint[121] = 0
+      prnf "                  Fail***"
+      prnf "\n      +++++ Fail: Should be supports Gen4"
+   endif
+   if (checkGen == 1 && i == 0)
+      CsvCheckPoint[121] = 1
+      prnf "                  Pass"
+   endif
+   if (checkGen == 3 && i == 0)
+      CsvCheckPoint[121] = 0
+      prnf "                  Fail***"
+      prnf "\n      +++++ Fail: Should be supports Gen4"
+   endif
+else
+   prnf "PCIe Gen4 (IDFY 3106; Bit 4:3=01b)"
+   if (checkGen == 0 && i == 0)
+      CsvCheckPoint[121] = 1
+      prnf "                  Pass"
+   endif
+   if (checkGen == 1 && i == 0)
+      CsvCheckPoint[121] = 0
+      prnf "                  Fail***"
+      prnf "\n      +++++ Fail: Should be supports Gen3"
+   endif
+   if (checkGen == 3 && i == 0)
+      CsvCheckPoint[121] = 1
+      prnf "                  Pass"
+   endif
+endif
+
+
+prnf "\n  DELL Unique Features       : "
+rpoint=3108
+rrw i1
+if (i1&8000h)
+   if (i1&1)
+      CsvCheckPoint[13] = 1
+      prnf "SCP supported (IDFY 3108; Bit 0=1)                  Pass"
+   else
+      CsvCheckPoint[13] = 0
+      prnf "SCP not supported (IDFY 3108; Bit 0=0)              Fail***"
+      ErrCnt+=1
+   endif
+   if (i1&2)
+      CsvCheckPoint[14] = 1
+      prnf "\n                               Host Metadata supported (IDFY 3108; Bit 1=1)        Pass"
+   else
+      CsvCheckPoint[14] = 0
+      prnf "\n                               Host Metadata supported (IDFY 3108; Bit 1=0)        Fail***"
+      ErrCnt+=1
+   endif
+else 
+   CsvCheckPoint[13] = 0
+   prnf "Word 3108; Bit 15=0, SCP & Host Metadata not supported"
+   prnf " (%4.4Xh)      Fail***",i1
+   ErrCnt+=1
+endif
+
+prnf "\n  GUID                       : "
+rpoint=3110; rr i1;
+i = 0
+for (rpoint=3110;rpoint<(3110+16);rpoint+=1)
+   rr i1
+   GUIDVal[i] = i1
+   i+=1
+endfor
+
+GUID[0] = (GUIDVal[0]<<24)+(GUIDVal[1]<<16)+(GUIDVal[2]<<8)+GUIDVal[3]
+GUID[1] = (GUIDVal[4]<<24)+(GUIDVal[5]<<16)+(GUIDVal[6]<<8)+GUIDVal[7]
+GUID[2] = (GUIDVal[8]<<24)+(GUIDVal[9]<<16)+(GUIDVal[10]<<8)+GUIDVal[11]
+GUID[3] = (GUIDVal[12]<<24)+(GUIDVal[13]<<16)+(GUIDVal[14]<<8)+GUIDVal[15]
+prnf "%8.8X-",GUID[0];prnf "%8.8X-",GUID[1];prnf "%8.8X-",GUID[2];prnf "%8.8X",GUID[3]
+
+prnf "\n  ComponentID                : "
+rpoint=3126; rr i1;
+i = 0
+for (rpoint=3126;rpoint<(3126+8);rpoint+=1)
+   rr i1
+   ComponentIDVal[i] = i1
+   i+=1
+endfor
+ComponentIDEnd = i
+i = 0
+ComponentIDChk = 0
+do
+   if (ComponentIDVal[i] == 0)
+      prnf "_"
+   else
+      prnf "%C", ComponentIDVal[i]
+   endif
+   i+=1
+until (i == ComponentIDEnd)
+prnf "\n  Note: '_' stands for null character (00h)"
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[11] == 1 && CsvCheckPoint[12] == 1 && CsvCheckPoint[13] == 1)
+   prnf "\nDell IDFY Checking:, PASS"
+else
+   prnf "\nDell IDFY Checking:, FAIL"
+endif
+if (CsvCheckPoint[11] == 1)
+   prnf "\n DELL ePPID:, PASS"
+else
+   prnf "\n DELL ePPID:, FAIL"
+endif
+if (CsvCheckPoint[12] == 1 && CsvCheckPoint[121] == 1)
+   prnf "\n DELL Device Catogory:, PASS"
+else
+   prnf "\n DELL Device Catogory:, FAIL"
+endif
+if (CsvCheckPoint[13] == 1)
+   prnf "\n DELL Unique Features - SCP:, PASS"
+else
+   prnf "\n DELL Unique Features - SCP:, FAIL"
+endif
+if (CsvCheckPoint[14] == 1)
+   prnf "\n DELL Unique Features - Host Metadata:, PASS"
+else
+   prnf "\n DELL Unique Features - Host Metadata:, FAIL"
+endif
+endexport
+
+
+prns ""
+prns ""
+prnf "\n Test Case 2: Dell SMART Attribute Table"
+prnf "\n                                                     Value         Dell Spec       Result   "
+prnf "\n ==========================================================================================="
+NVM_CMD_NSID = 0ffffffffh
+nvm_getlog 0cah,100h
+if (code)
+   prnf "\n  Support Dell SMART Get Log command (0CAh)        :   No"
+   i0 = 0
+else
+   prnf "\n  Support Dell SMART Get Log command (0CAh)        :  Yes"
+   i0 = 1
+endif
+if (DellSmartSup == 0)
+   prnf "             No"
+else
+   prnf "             Yes"
+endif
+if (DellSmartSup == i0)
+   CsvCheckPoint[21] = 1
+   prnf "          Pass"
+else
+   CsvCheckPoint[21] = 0
+   prnf "          Fail***"
+   ErrCnt+=1
+   prnf "\n      +++++ Fail: Not Support SMART Get Log Command"
+   prnf "\n"
+   prnf "\n"
+endif
+if (i0 == 0)
+   goto CaseExit
+endif
+copy "ReadA","Read"
+g0 = 0
+SmartOffset = 0
+do
+   RU "ReadA", SmartOffset, Smartdata[g0]
+   SmartOffset+=1
+   g0+=1
+until (SmartOffset == 12)
+RBC = (Smartdata[11]<<24)+(Smartdata[10]<<16)+(Smartdata[9]<<8)+Smartdata[8]
+prnf "\n  Re-Assigned Sector Count                         : %3d%%",Smartdata[0];
+if (DellSmartSpec[0] == 0)
+   CsvCheckPoint[22] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[0]
+   if (Smartdata[0] <= DellSmartSpec[0])
+      CsvCheckPoint[22] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[22] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Program Fail Count (Worst Case Component)        : %3d%%",Smartdata[1]
+if (DellSmartSpec[1] == 0)
+   CsvCheckPoint[23] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[1]
+   if (Smartdata[1] <= DellSmartSpec[1])
+      CsvCheckPoint[23] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[23] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Program Fail Count (SSD Total)                   : %3d%%",Smartdata[2]
+if (DellSmartSpec[2] == 0)
+   CsvCheckPoint[24] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[2]
+   if (Smartdata[2] <= DellSmartSpec[2])
+      CsvCheckPoint[24] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[24] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+prnf "\n  Erase Fail Count (Worst Case Component)          : %3d%%",Smartdata[3]
+if (DellSmartSpec[3] == 0)
+   CsvCheckPoint[25] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[3]
+   if (Smartdata[3] <= DellSmartSpec[3])
+      CsvCheckPoint[25] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[25] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+prnf "\n  Erase Fail Count (SSD Total)                     : %3d%%",Smartdata[4]
+if (DellSmartSpec[1] == 4)
+   CsvCheckPoint[26] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[4]
+   if (Smartdata[4] <= DellSmartSpec[4])
+      CsvCheckPoint[26] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[26] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+prnf "\n  Wear Leveling Count                              : %3d%%",Smartdata[5]
+if (DellSmartSpec[5] == 0)
+   CsvCheckPoint[27] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[5]
+   if (Smartdata[5] <= DellSmartSpec[5])
+      CsvCheckPoint[27] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[27] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+prnf "\n  Used Reserved Block Count (Worst Case Component) : %3d%%",Smartdata[6]
+if (DellSmartSpec[6] == 0)
+   CsvCheckPoint[28] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[6]
+   if (Smartdata[6] <= DellSmartSpec[6])
+      CsvCheckPoint[28] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[28] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+prnf "\n  Used Reserved Block Count (SSD Total)            : %3d%%",Smartdata[7]
+if (DellSmartSpec[7] == 0)
+   CsvCheckPoint[29] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02d%%",DellSmartSpec[7]
+   if (Smartdata[7] <= DellSmartSpec[7])
+      CsvCheckPoint[29] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[29] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Reserved Block Count (SSD Total)                 : %8.8X",RBC
+if (DellSmartSpec[8] == 0)
+   CsvCheckPoint[210] = 2
+   prnf "         NA"; prnf "           NA"
+else
+   prnf "             %02d",DellSmartSpec[8]
+   if (RBC <= DellSmartSpec[8])
+      CsvCheckPoint[210] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[210] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+MNTMT = (Smartdata[13]<<8)+Smartdata[12]
+if (MNTMT == 0)
+   DegressMNTMT = MNTMT 
+else
+   DegressMNTMT = MNTMT - 273
+endif
+prnf "\n  Minimum Temperature                              : %3dC",DegressMNTMT
+if (DellSmartSpec[9] == 0)
+   CsvCheckPoint[211] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02dC",DellSmartSpec[9]
+   if (MNTMT <= DellSmartSpec[9])
+      CsvCheckPoint[211] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[211] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+MXTMT = (Smartdata[15]<<8)+Smartdata[14]
+if (MXTMT == 0)
+   DegressMXTMT = MXTMT
+else
+   DegressMXTMT = MXTMT - 273
+endif
+prnf "\n  Maximum Temperature                              : %3dC",DegressMXTMT
+if (DellSmartSpec[10] == 0)
+   CsvCheckPoint[212] = 2
+   prnf "             NA"; prnf "           NA"
+else
+   prnf "             %02dC",DellSmartSpec[10]
+   if (MXTMT <= DellSmartSpec[10])
+      CsvCheckPoint[212] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[212] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+TotDataW = (Smartdata[31]<<120)+(Smartdata[30]<<112)+(Smartdata[29]<<104)+(Smartdata[28]<<96)+(Smartdata[27]<<88)+(Smartdata[26]<<80)+(Smartdata[25]<<72)+(Smartdata[24]<<64)+(Smartdata[23]<<56)+(Smartdata[22]<<48)+(Smartdata[21]<<40)+(Smartdata[20]<<32)+(Smartdata[19]<<24)+(Smartdata[18]<<16)+(Smartdata[17]<<8)+Smartdata[16]
+ShortInfo = TotDataW*512/1000000
+prnf "\n  Total Data Written by the Controller to the NAND : %3I64dGB", TotDataW*512/1000000
+if (DellSmartSpec[11] == 0)
+   CsvCheckPoint[213] = 2
+   prnf "            NA"; prnf "           NA"
+else
+   prnf "             %02dGB",DellSmartSpec[11]
+   if (ShortInfo <= DellSmartSpec[11])
+      CsvCheckPoint[213] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[213] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+HAIC = (Smartdata[35]<<24)+(Smartdata[34]<<16)+(Smartdata[33]<<8)+Smartdata[32]
+prnf "\n  Accumulated host Active Idle Counter             : %3d", HAIC
+if (DellSmartSpec[12] == 0)
+   CsvCheckPoint[214] = 2
+   prnf "              NA"; prnf "           NA"
+else
+   prnf "             %02d",DellSmartSpec[12]
+   if (HAIC <= DellSmartSpec[12])
+      CsvCheckPoint[214] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[214] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+ANOPSC = (Smartdata[39]<<24)+(Smartdata[38]<<16)+(Smartdata[37]<<8)+Smartdata[36]
+prnf "\n  Accumulated NonOperational Power State Counte    : %3d", ANOPSC
+if (DellSmartSpec[13] == 0)
+   CsvCheckPoint[215] = 2
+   prnf "              NA"; prnf "           NA"
+else
+   prnf "             %02d",DellSmartSpec[13]
+   if (ANOPSC <= DellSmartSpec[13])
+      CsvCheckPoint[215] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[215] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Abnormal Input Vcc Voltage Counter               : %3d", Smartdata[40]
+if (DellSmartSpec[14] == 0)
+   CsvCheckPoint[216] = 2
+   prnf "              NA"; prnf "           NA"
+else
+   prnf "             %02d",DellSmartSpec[14]
+   if (Smartdata[40] <= DellSmartSpec[14])
+      CsvCheckPoint[216] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[216] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device Value is higher than Dell Spec Value"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+
+//MBR or GPT partitions 
+NVM_CMD_NSID = 1
+ChkRdErr = 0
+nvm_read 0, 1
+wait 500
+i = 0h
+do
+   RPOINT = i
+   RR dataVal
+   if (dataVal != 0)
+      ChkRdErr = 1
+      goto TestEnda      
+   endif    
+   i+=1
+until (i == 200h)
+TestEnda:
+if (ChkRdErr == 1)
+   CsvCheckPoint[217] = 0
+   prnf "\n  MBR or GPT partitions                            :  Yes"
+   prnf "             No"; prnf "           Fail***"
+   ErrCnt+=1
+else
+   CsvCheckPoint[217] = 1
+   prnf "\n  MBR or GPT partitions                            :   No"
+   prnf "             No"; prnf "           Pass"
+endif
+NVM_CMD_NSID = 0
+
+//SMART Power On Hours
+NVM_GETLOG_SMART
+g0 = 0
+SmartOffset = 128
+do
+   RU "ReadA", SmartOffset, SmartPwdata[g0]
+   SmartOffset+=1
+   g0+=1
+until (SmartOffset == 144)
+PwOnHr = (SmartPwdata[7]<<56)+(SmartPwdata[6]<<48)+(SmartPwdata[5]<<40)+(SmartPwdata[4]<<32)+(SmartPwdata[3]<<24)+(SmartPwdata[2]<<16)+(SmartPwdata[1]<<8)+SmartPwdata[0]
+prnf "\n  Power On Hours (128:143)                         : %4d hr", PwOnHr
+if (PwOnHr > 10)
+   CsvCheckPoint[218] = 0
+   prnf "          <10 hr"; prnf "       Fail***"
+else
+   CsvCheckPoint[218] = 1
+   prnf "          <10 hr"; prnf "       Pass"
+endif
+CaseExit:
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[21] >= 1 && CsvCheckPoint[22] >= 1 && CsvCheckPoint[23] >= 1 && CsvCheckPoint[24] >= 1 && CsvCheckPoint[25] >= 1 && CsvCheckPoint[26] >= 1 && CsvCheckPoint[27] >= 1 && CsvCheckPoint[28] >= 1 && CsvCheckPoint[29] >= 1 && CsvCheckPoint[210] >= 1 && CsvCheckPoint[211] >= 1 && CsvCheckPoint[212] >= 1 && CsvCheckPoint[213] >= 1 && CsvCheckPoint[214] >= 1 && CsvCheckPoint[215] >= 1 && CsvCheckPoint[216] >= 1 && CsvCheckPoint[217] >= 1 && CsvCheckPoint[218] >= 1)
+   prnf "\nDell SMART Attribute Table:, PASS"
+else
+   prnf "\nDell SMART Attribute Table:, FAIL"
+endif
+
+if (CsvCheckPoint[21] == 1)
+   prnf "\n Support Dell SMART Get Log command (0CAh):, PASS"
+   if (CsvCheckPoint[22] == 1)
+      prnf "\n Re-Assigned Sector Count:, PASS"
+   elseif (CsvCheckPoint[22] == 2)
+      prnf "\n Re-Assigned Sector Count:, NA"
+   else
+      prnf "\n Re-Assigned Sector Count:, FAIL"
+   endif
+   if (CsvCheckPoint[23] == 1)
+      prnf "\n Program Fail Count (Worst Case Component):, PASS"
+   elseif (CsvCheckPoint[23] == 2)
+      prnf "\n Program Fail Count (Worst Case Component):, NA"
+   else
+      prnf "\n Program Fail Count (Worst Case Component):, FAIL"
+   endif
+   if (CsvCheckPoint[24] == 1)
+      prnf "\n Program Fail Count (SSD Total):, PASS"
+   elseif (CsvCheckPoint[24] == 2)
+      prnf "\n Program Fail Count (SSD Total):, NA"
+   else
+      prnf "\n Program Fail Count (SSD Total):, FAIL"
+   endif
+   if (CsvCheckPoint[25] == 1)
+      prnf "\n Erase Fail Count (Worst Case Component):, PASS"
+   elseif (CsvCheckPoint[25] == 2)
+      prnf "\n Erase Fail Count (Worst Case Component):, NA"
+   else
+      prnf "\n Erase Fail Count (Worst Case Component):, FAIL"
+   endif
+   if (CsvCheckPoint[26] == 1)
+      prnf "\n Erase Fail Count (SSD Total):, PASS"
+   elseif (CsvCheckPoint[26] == 2)
+      prnf "\n Erase Fail Count (SSD Total):, NA"
+   else
+      prnf "\n Erase Fail Count (SSD Total):, FAIL"
+   endif
+   if (CsvCheckPoint[27] == 1)
+      prnf "\n Wear Leveling Count:, PASS"
+   elseif (CsvCheckPoint[27] == 2)
+      prnf "\n Wear Leveling Count:, NA"
+   else
+      prnf "\n Wear Leveling Count:, FAIL"
+   endif
+   if (CsvCheckPoint[28] == 1)
+      prnf "\n Used Reserved Block Count (Worst Case Component):, PASS"
+   elseif (CsvCheckPoint[28] == 2)
+      prnf "\n Used Reserved Block Count (Worst Case Component):, NA"
+   else
+      prnf "\n Used Reserved Block Count (Worst Case Component):, FAIL"
+   endif
+   if (CsvCheckPoint[29] == 1)
+      prnf "\n Used Reserved Block Count (SSD Total):, PASS"
+   elseif (CsvCheckPoint[29] == 2)
+      prnf "\n Used Reserved Block Count (SSD Total):, NA"
+   else
+      prnf "\n Used Reserved Block Count (SSD Total):, FAIL"
+   endif
+   if (CsvCheckPoint[210] == 1)
+      prnf "\n Reserved Block Count (SSD Total):, PASS"
+   elseif (CsvCheckPoint[210] == 2)
+      prnf "\n Reserved Block Count (SSD Total):, NA"
+   else
+      prnf "\n Reserved Block Count (SSD Total):, FAIL"
+   endif
+   if (CsvCheckPoint[211] == 1)
+      prnf "\n Minimum Temperature:, PASS"
+   elseif (CsvCheckPoint[211] == 2)
+      prnf "\n Minimum Temperature:, NA"
+   else
+      prnf "\n Minimum Temperature:, FAIL"
+   endif
+   if (CsvCheckPoint[212] == 1)
+      prnf "\n Maximum Temperature:, PASS"
+   elseif (CsvCheckPoint[212] == 2)
+      prnf "\n Maximum Temperature:, NA"
+   else
+      prnf "\n Maximum Temperature:, FAIL"
+   endif
+   if (CsvCheckPoint[213] == 1)
+      prnf "\n Total Data Written by the Controller to the NAND:, PASS"
+   elseif (CsvCheckPoint[213] == 2)
+      prnf "\n Total Data Written by the Controller to the NAND:, NA"
+   else
+      prnf "\n Total Data Written by the Controller to the NAND:, FAIL"
+   endif
+   if (CsvCheckPoint[214] == 1)
+      prnf "\n Accumulated host Active Idle Counter:, PASS"
+   elseif (CsvCheckPoint[214] == 2)
+      prnf "\n Accumulated host Active Idle Counter:, NA"
+   else
+      prnf "\n Accumulated host Active Idle Counter:, FAIL"
+   endif
+   if (CsvCheckPoint[215] == 1)
+      prnf "\n Accumulated NonOperational Power State Counte:, PASS"
+   elseif (CsvCheckPoint[215] == 2)
+      prnf "\n Accumulated NonOperational Power State Counte:, NA"
+   else
+      prnf "\n Accumulated NonOperational Power State Counte:, FAIL"
+   endif
+   if (CsvCheckPoint[216] == 1)
+      prnf "\n Abnormal Input Vcc Voltage Counter:, PASS"
+   elseif (CsvCheckPoint[216] == 2)
+      prnf "\n Abnormal Input Vcc Voltage Counter:, NA"
+   else
+      prnf "\n Abnormal Input Vcc Voltage Counter:, FAIL"
+   endif
+   if (CsvCheckPoint[217] == 1)
+      prnf "\n MBR or GPT partitions:, PASS"
+   else
+      prnf "\n MBR or GPT partitions:, FAIL"
+   endif
+   if (CsvCheckPoint[218] == 1)
+      prnf "\n SMART Power On Hours:, PASS"
+   else
+      prnf "\n SMART Power On Hours:, FAIL"
+   endif
+else
+   prnf "\n Support Dell SMART Get Log command (0CAh):, FAIL"
+   prnf "\n Re-Assigned Sector Count:, NA"
+   prnf "\n Program Fail Count (Worst Case Component):, NA"
+   prnf "\n Program Fail Count (SSD Total):, NA"
+   prnf "\n Erase Fail Count (Worst Case Component):, NA"
+   prnf "\n Erase Fail Count (SSD Total):, NA"
+   prnf "\n Wear Leveling Count:, NA"
+   prnf "\n Used Reserved Block Count (Worst Case Component):, NA"
+   prnf "\n Used Reserved Block Count (SSD Total):, NA"
+   prnf "\n Reserved Block Count (SSD Total):, NA"
+   prnf "\n MBR or GPT partitions:, NA"
+   prnf "\n SMART Power On Hours:, NA"
+endif
+endexport
+
+
+prns ""
+prns ""
+prnf "\n Test Case 3: Dell Security Support"
+prnf "\n                                                             Value         Dell Spec       Result   "
+prnf "\n ==================================================================================================="
+NVM_CMD_NSID = 1;NVM_Idfy_Ctrlr
+TCG_ChkSpt
+if (TCG_SPT)
+   prnf "\n  TCG Security supported (Word: 256; Bit 0=1)              :  Yes"
+   DUTTCGSpec[0] = 1
+else
+   prnf "\n  TCG Security not supported (Word: 256; Bit 0=0)          :   No"
+   DUTTCGSpec[0] = 0
+endif
+if (DellTCGSpec[0] == 0)
+   prnf "              No"
+else
+   prnf "             Yes"
+endif
+if (DellTCGSpec[0] == DUTTCGSpec[0])
+   CsvCheckPoint[31] = 1
+   prnf "          Pass"
+else
+   CsvCheckPoint[31] = 0
+   prnf "          Fail***"
+   ErrCnt+=1
+   prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+   prnf "\n"
+   prnf "\n"
+endif
+tcg_level0_discovery
+CsvCheckPoint[32] = 0
+for (i=0;i<TCG_FEATURE_NUM;i+=1)
+   TCG_FTCODE_OFFSET i,i0,i1
+   if (i1==0200h)
+      CsvCheckPoint[32] = 1
+      SecurityCheck = 0
+      prnf "\n  TCG SSC supports (Level 0 Discovery Feature Code:0200h)  :  Opal 1.0     Opal/Pyrite     Pass"
+   elseif (i1==0203h)
+      CsvCheckPoint[32] = 1
+      SecurityCheck = 1
+      prnf "\n  TCG SSC supports (Level 0 Discovery Feature Code:0203h)  :  Opal 2.01    Opal/Pyrite     Pass"  
+   elseif (i1==0302h)
+      CsvCheckPoint[32] = 1
+      SecurityCheck = 2
+      prnf "\n  TCG SSC supports (Level 0 Discovery Feature Code:0302h)  :  Pyrite 1.0   Opal/Pyrite     Pass"
+   elseif (i1==0303h)
+      CsvCheckPoint[32] = 1
+      SecurityCheck = 3
+      prnf "\n  TCG SSC supports (Level 0 Discovery Feature Code:0303h)  :  Pyrite 2.0   Opal/Pyrite     Pass"
+   endif
+endfor
+if (bPsid == 1)
+   prnf "\n  PSID support (Authority UID: 00000009-0001FF01)          :  Yes"
+else
+   prnf "\n  PSID support (Authority UID: 00000009-0001FF01)          :   No"
+endif
+if (DellPSIDSup == 0)
+   prnf "              No"
+else
+   prnf "             Yes"
+endif
+if (DellPSIDSup == bPsid)
+   CsvCheckPoint[33] = 1
+   prnf "          Pass"
+else
+   CsvCheckPoint[33] = 0
+   prnf "          Fail***"
+   ErrCnt+=1
+endif
+
+if (TCG_BS_DESC == 1)
+   prnf "\n  Block SID support (Level 0 Discovery Feature Code:0402h) :  Yes"
+else
+   prnf "\n  Block SID support (Level 0 Discovery Feature Code:0402h) :   No"
+endif
+if (DellTCGBlockSID == 0)
+   prnf "              No"
+else
+   prnf "             Yes"
+endif
+if (DellTCGBlockSID == TCG_BS_DESC)
+   CsvCheckPoint[34] = 1
+   prnf "          Pass"
+else
+   CsvCheckPoint[34] = 0
+   prnf "          Fail***"
+   ErrCnt+=1
+endif
+
+tcg_level0_discovery
+SEDSpt = tcg_lock_encrypt
+if (SEDSpt == 1)
+   prnf "\n  SED support (Level 0 Discovery Feature Code:0002h)       :  Yes"
+   if (SecurityCheck == 0)
+      CsvCheckPoint[35] = 1
+      prnf "          Opal 1.0        Pass"
+   elseif (SecurityCheck == 1)
+      CsvCheckPoint[35] = 1
+      prnf "          Opal 2.01       Pass"
+   elseif (SecurityCheck == 2)
+      CsvCheckPoint[35] = 0
+      prnf "          Pyrite 1.0      Fail***"
+      prnf "\n      +++++ Fail: Support SED, The Device shall be support TCG OPAL"
+   elseif (SecurityCheck == 3)
+      CsvCheckPoint[35] = 0
+      prnf "          Pyrite 2.0      Fail***"
+      prnf "\n      +++++ Fail: Support SED, The Device shall be support TCG OPAL"
+   endif
+else
+   prnf "\n  SED support (Level 0 Discovery Feature Code:0002h)       :   No"
+   if (SecurityCheck == 0)
+      CsvCheckPoint[35] = 0
+      prnf "          Opal 1.0        Fail***"
+      prnf "\n      +++++ Fail: Non-SED, The Device shall be support Pyrite 2.0"
+   elseif (SecurityCheck == 1)
+      CsvCheckPoint[35] = 0
+      prnf "          Opal 2.01       Fail***"
+      prnf "\n      +++++ Fail: Non-SED, The Device shall be support Pyrite 2.0"
+   elseif (SecurityCheck == 2)
+      CsvCheckPoint[35] = 1
+      prnf "          Pyrite 1.0      Pass"
+   elseif (SecurityCheck == 3)
+      CsvCheckPoint[35] = 1
+      prnf "          Pyrite 2.0      Pass"
+   endif
+endif
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[31] >= 1 && CsvCheckPoint[32] >= 1 && CsvCheckPoint[33] >= 1 && CsvCheckPoint[34] >= 1 && CsvCheckPoint[35] >= 1)
+   prnf "\nDell Security Support:, PASS"
+else
+   prnf "\nDell Security Support:, FAIL"
+endif
+
+if (CsvCheckPoint[31] == 1)
+   prnf "\n TCG Security supported:, PASS"
+else
+   prnf "\n TCG Security supported:, FAIL"
+endif
+
+if (CsvCheckPoint[32] == 1)
+   prnf "\n TCG SSC supports:, PASS"
+else
+   prnf "\n TCG SSC supports:, FAIL"
+endif
+
+if (CsvCheckPoint[33] == 1)
+   prnf "\n PSID support:, PASS"
+else
+   prnf "\n PSID support:, FAIL"
+endif
+
+if (CsvCheckPoint[34] == 1)
+   prnf "\n Block SID support:, PASS"
+else
+   prnf "\n Block SID support:, FAIL"
+endif
+
+if (CsvCheckPoint[35] == 1)
+   prnf "\n SED support:, PASS"
+else
+   prnf "\n SED support:, FAIL"
+endif
+endexport
+prns ""
+prns ""
+prnf "\n Test Case 4: Dell NVMe Command Set (Mandatory)"
+prnf "\n                                                     Value         Dell Spec       Result   "
+prnf "\n ==========================================================================================="
+IDFYValue = 520
+IDFYValue1 = 256
+NVM_CMD_NSID = 0
+NVM_GETLOG_CMDEFFECT
+g0 = 0
+EffOffset = 0
+do
+   RU "ReadA", EffOffset, Effdata[g0]
+   EffOffset+=1
+   g0+=1
+until (EffOffset == 2048)
+i = 0
+j = 0
+do
+   ACS[i] = (Effdata[3+j]<<24)+(Effdata[2+j]<<16)+(Effdata[1+j]<<8)+Effdata[0+j]
+   IOCS[i] = (Effdata[1027+j]<<24)+(Effdata[1026+j]<<16)+(Effdata[1025+j]<<8)+Effdata[1024+j]
+   i+=1
+   j+=4
+until (i == 256)
+nvm_idfy
+RU "ReadA", IDFYValue, MandatoryCmdVal[0]
+RU "ReadA", IDFYValue1, MandatoryCmdVal[1]
+DMSUP = (MandatoryCmdVal[0]>>2)&1
+SSSUP = ACS[129]&1
+SRSUP = ACS[130]&1
+//DSTSUP = (MandatoryCmdVal[1]>>4)&1
+//CMPSUP = (MandatoryCmdVal[0]>>0)&1
+WZSUP = (MandatoryCmdVal[0]>>3)&1
+WUSUP = (MandatoryCmdVal[0]>>1)&1
+if (DMSUP == 1)
+   prnf "\n  Support Dataset Management (Byte: %d;", IDFYValue; prnf " Bit 2=%d)", DMSUP; prnf "  :  Yes"
+else
+   prnf "\n  Support Dataset Management (Byte: %d;", IDFYValue; prnf " Bit 2=%d)", DMSUP; prnf "  :   No"
+endif
+if (DellNVMCmdSetM[0] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetM[0] == DMSUP)
+      CsvCheckPoint[41] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[41] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[0] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetM[0] == DMSUP)
+      CsvCheckPoint[41] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[41] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[0] == 2)
+   CsvCheckPoint[41] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+
+if (nvm_sec_spt == 1)
+   prnf "\n  Support Security Send (Byte: %d;", IDFYValue1; prnf " Bit 0=%d)", nvm_sec_spt; prnf "       :  Yes"
+else
+   prnf "\n  Support Security Send (Byte: %d;", IDFYValue1; prnf " Bit 0=%d)", nvm_sec_spt; prnf "       :   No"
+endif
+if (DellNVMCmdSetM[1] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetM[1] == SSSUP)
+      CsvCheckPoint[42] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[42] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[1] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetM[1] == SSSUP)
+      CsvCheckPoint[42] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[42] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[1] == 2)
+   CsvCheckPoint[42] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+
+if (SRSUP == 1)
+   prnf "\n  Support Security Receive (Byte: %d;", IDFYValue1; prnf " Bit 0=%d)", SRSUP; prnf "    :  Yes"
+else
+   prnf "\n  Support Security Receive (Byte: %d;", IDFYValue1; prnf " Bit 0=%d)", SRSUP; prnf "    :   No"
+endif
+if (DellNVMCmdSetM[2] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetM[2] == SRSUP)
+      CsvCheckPoint[43] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[43] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[2] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetM[2] == SRSUP)
+      CsvCheckPoint[43] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[43] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[2] == 2)
+   CsvCheckPoint[43] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+
+if (nvm_dst_spt == 1)
+   prnf "\n  Support Device Self-Test (Byte: %d;", IDFYValue1; prnf " Bit 4=%d)", nvm_dst_spt; prnf "    :  Yes"
+else
+   prnf "\n  Support Device Self-Test (Byte: %d;", IDFYValue1; prnf " Bit 4=%d)", nvm_dst_spt; prnf "    :   No"
+endif
+if (DellNVMCmdSetM[3] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetM[3] == nvm_dst_spt)
+      CsvCheckPoint[44] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[44] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[3] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetM[3] == nvm_dst_spt)
+      CsvCheckPoint[44] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[44] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[3] == 2)
+   CsvCheckPoint[44] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+
+if (nvm_cmp_spt == 1)
+   prnf "\n  Support Compare (Byte: %d;", IDFYValue; prnf " Bit 0=%d)", nvm_cmp_spt; prnf "             :  Yes"
+else
+   prnf "\n  Support Compare (Byte: %d;", IDFYValue; prnf " Bit 0=%d)", nvm_cmp_spt; prnf "              :  No"
+endif
+if (DellNVMCmdSetM[4] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetM[4] == nvm_cmp_spt)
+      CsvCheckPoint[45] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[45] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[4] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetM[4] == nvm_cmp_spt)
+      CsvCheckPoint[45] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[45] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[4] == 2)
+   CsvCheckPoint[45] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+
+if (nvm_vfy_spt == 1)
+
+   prnf "\n  Support Verify (Byte: %d;", IDFYValue; prnf " Bit 7=%d)", nvm_vfy_spt; prnf "              :  Yes"
+else
+   prnf "\n  Support Verify (Byte: %d;", IDFYValue; prnf " Bit 7=%d)", nvm_vfy_spt; prnf "              :  No"
+endif
+if (DellNVMCmdSetM[5] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetM[5] == nvm_vfy_spt)
+      CsvCheckPoint[46] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[46] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[5] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetM[5] == nvm_cmp_spt)
+      CsvCheckPoint[46] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[46] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetM[5] == 2)
+   CsvCheckPoint[46] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[41] >= 1 && CsvCheckPoint[42] >= 1 && CsvCheckPoint[43] >= 1 && CsvCheckPoint[44] >= 1 && CsvCheckPoint[45] >= 1)
+   prnf "\nDell NVMe Command Set (Mandatory):, PASS"
+else
+   prnf "\nDell NVMe Command Set (Mandatory):, FAIL"
+endif
+
+if (CsvCheckPoint[41] == 1)
+   prnf "\n Support Dataset Management:, PASS"
+elseif (CsvCheckPoint[41] == 2)
+   prnf "\n Support Dataset Management:, NA"
+else
+   prnf "\n Support Dataset Management:, FAIL"
+endif
+
+if (CsvCheckPoint[42] == 1)
+   prnf "\n Support Security Send:, PASS"
+elseif (CsvCheckPoint[42] == 2)
+   prnf "\n Support Security Send:, NA"
+else
+   prnf "\n Support Security Send:, FAIL"
+endif
+
+if (CsvCheckPoint[43] == 1)
+   prnf "\n Support Security Receive:, PASS"
+elseif (CsvCheckPoint[43] == 2)
+   prnf "\n Support Security Receive:, NA"
+else
+   prnf "\n Support Security Receive:, FAIL"
+endif
+
+if (CsvCheckPoint[44] == 1)
+   prnf "\n Support Device Self-Test:, PASS"
+elseif (CsvCheckPoint[44] == 2)
+   prnf "\n Support Device Self-Test:, NA"
+else
+   prnf "\n Support Device Self-Test:, FAIL"
+endif
+
+if (CsvCheckPoint[45] == 1)
+   prnf "\n Support Compare:, PASS"
+elseif (CsvCheckPoint[45] == 2)
+   prnf "\n Support Compare:, NA"
+else
+   prnf "\n Support Compare:, FAIL"
+endif
+
+if (CsvCheckPoint[46] == 1)
+   prnf "\n Support Verify:, PASS"
+elseif (CsvCheckPoint[46] == 2)
+   prnf "\n Support Verify:, NA"
+else
+   prnf "\n Support Verify:, FAIL"
+endif
+endexport
+
+prns ""
+prns ""
+prnf "\n Test Case 5: Dell NVMe Command Set (Optional)"
+prnf "\n                                                     Value         Dell Spec       Result   "
+prnf "\n ==========================================================================================="
+RESREGSUP = IOCS[13]&1
+RESREPSUP = IOCS[14]&1
+RESACQSUP = IOCS[17]&1
+RESRELSUP = IOCS[21]&1
+if (RESREGSUP == 1)
+   prnf "\n  Support Reservation Register (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESREGSUP; prnf ":  Yes"
+else
+   prnf "\n  Support Reservation Register (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESREGSUP; prnf ":   No"
+endif
+if (DellNVMCmdSetO[0] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetO[0] == RESREGSUP)
+      CsvCheckPoint[51] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[51] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[0] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetO[0] == RESREGSUP)
+      CsvCheckPoint[51] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[51] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[0] == 2)
+   CsvCheckPoint[51] = 1
+   prnf "           Optional"; prnf "       Pass"
+endif
+
+if (RESREPSUP == 1)
+   prnf "\n  Support Reservation Report (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESREPSUP; prnf "  :  Yes"
+else
+   prnf "\n  Support Reservation Report (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESREPSUP; prnf "  :   No"
+endif
+if (DellNVMCmdSetO[1] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetO[1] == RESREPSUP)
+      CsvCheckPoint[52] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[52] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[1] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetO[1] == RESREPSUP)
+      CsvCheckPoint[52] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[52] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[1] == 2)
+   CsvCheckPoint[52] = 1
+   prnf "           Optional"; prnf "       Pass"
+endif
+
+if (RESACQSUP == 1)
+   prnf "\n  Support Reservation Acquire (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESACQSUP; prnf " :  Yes"
+else
+   prnf "\n  Support Reservation Acquire (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESACQSUP; prnf " :   No"
+endif
+if (DellNVMCmdSetO[2] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetO[2] == RESACQSUP)
+      CsvCheckPoint[53] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[53] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[2] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetO[2] == RESACQSUP)
+      CsvCheckPoint[53] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[53] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[2] == 2)
+   CsvCheckPoint[53] = 1
+   prnf "           Optional"; prnf "       Pass"
+endif
+
+if (RESRELSUP == 1)
+   prnf "\n  Support Reservation Release (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESRELSUP; prnf " :  Yes"
+else
+   prnf "\n  Support Reservation Release (Byte: %d;", IDFYValue; prnf " Bit 5=%d)", RESRELSUP; prnf " :   No"
+endif
+if (DellNVMCmdSetO[3] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetO[3] == RESRELSUP)
+      CsvCheckPoint[54] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[54] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[3] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetO[3] == RESRELSUP)
+      CsvCheckPoint[54] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[54] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[3] == 2)
+   CsvCheckPoint[54] = 1
+   prnf "           Optional"; prnf "       Pass"
+endif
+
+if (WZSUP == 1)
+   prnf "\n  Support Write Zeroes (Byte: %d;", IDFYValue; prnf " Bit 3=%d)", WZSUP; prnf "        :  Yes"
+else
+   prnf "\n  Support Write Zeroes (Byte: %d;", IDFYValue; prnf " Bit 3=%d)", WZSUP; prnf "        :   No"
+endif
+if (DellNVMCmdSetO[4] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetO[4] == WZSUP)
+      CsvCheckPoint[55] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[55] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[4] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetO[4] == WZSUP)
+      CsvCheckPoint[55] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[55] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[4] == 2)
+   CsvCheckPoint[55] = 1
+   prnf "           Optional"; prnf "       Pass"
+endif
+
+if (WUSUP == 1)
+   prnf "\n  Support Write Uncorrectable (Byte: %d;", IDFYValue; prnf " Bit 1=%d)", WUSUP; prnf " :  Yes"
+else
+   prnf "\n  Support Write Uncorrectable (Byte: %d;", IDFYValue; prnf " Bit 1=%d)", WUSUP; prnf " :   No"
+endif
+if (DellNVMCmdSetO[5] == 0)
+   prnf "              No"
+   if (DellNVMCmdSetO[5] == WUSUP)
+      CsvCheckPoint[56] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[56] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[5] == 1)
+   prnf "             Yes"
+   if (DellNVMCmdSetO[5] == WUSUP)
+      CsvCheckPoint[56] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[56] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellNVMCmdSetO[5] == 2)
+   CsvCheckPoint[56] = 1
+   prnf "           Optional"; prnf "       Pass"
+endif
+prns ""
+prns ""
+
+//FWSlot
+NVM_GETLOG_FWSLOT
+g0 = 0
+FWSlotOffset = 0
+do
+   RU "ReadA", FWSlotOffset, FWSlotdata[g0]
+   FWSlotOffset+=1
+   g0+=1
+until (FWSlotOffset == 64)
+
+AFIRun = FWSlotdata[0]>>0&3
+AFIGo = FWSlotdata[0]>>4&3
+FWID = ACS[17]&1
+i = 1
+j = 0
+do
+   FRS[i] = (FWSlotdata[15+j]<<56)+(FWSlotdata[14+j]<<48)+(FWSlotdata[13+j]<<40)+(FWSlotdata[12+j]<<32)+(FWSlotdata[11+j]<<24)+(FWSlotdata[10+j]<<16)+(FWSlotdata[9+j]<<8)+FWSlotdata[8+j]
+      i+=1
+      j+=8
+until (i==8)
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[51] >= 1 && CsvCheckPoint[52] >= 1 && CsvCheckPoint[53] >= 1 && CsvCheckPoint[54] >= 1 && CsvCheckPoint[55] >= 1 && CsvCheckPoint[56] >= 1)
+   prnf "\nDell NVMe Command Set (Optional):, PASS"
+else
+   prnf "\nDell NVMe Command Set (Optional):, FAIL"
+endif
+
+if (CsvCheckPoint[51] == 1)
+   prnf "\n Support Reservation Register:, PASS"
+elseif (CsvCheckPoint[51] == 2)
+   prnf "\n Support Reservation Register:, NA"
+else
+   prnf "\n Support Reservation Register:, FAIL"
+endif
+
+if (CsvCheckPoint[52] == 1)
+   prnf "\n Support Reservation Report:, PASS"
+elseif (CsvCheckPoint[52] == 2)
+   prnf "\n Support Reservation Report:, NA"
+else
+   prnf "\n Support Reservation Report:, FAIL"
+endif
+
+if (CsvCheckPoint[53] == 1)
+   prnf "\n Support Reservation Acquire:, PASS"
+elseif (CsvCheckPoint[53] == 2)
+   prnf "\n Support Reservation Acquire:, NA"
+else
+   prnf "\n Support Reservation Acquire:, FAIL"
+endif
+
+if (CsvCheckPoint[54] == 1)
+   prnf "\n Support Reservation Release:, PASS"
+elseif (CsvCheckPoint[54] == 2)
+   prnf "\n Support Reservation Release:, NA"
+else
+   prnf "\n Support Reservation Release:, FAIL"
+endif
+
+if (CsvCheckPoint[55] == 1)
+   prnf "\n Support Write Zeroes:, PASS"
+elseif (CsvCheckPoint[55] == 2)
+   prnf "\n Support Write Zeroes:, NA"
+else
+   prnf "\n Support Write Zeroes:, FAIL"
+endif
+
+if (CsvCheckPoint[56] == 1)
+   prnf "\n Support Write Uncorrectable:, PASS"
+elseif (CsvCheckPoint[56] == 2)
+   prnf "\n Support Write Uncorrectable:, NA"
+else
+   prnf "\n Support Write Uncorrectable:, FAIL"
+endif
+endexport
+
+
+prns "\n Test Case 6: Dell Firmware Slot Information"
+prnf "\n                                                     Value         Dell Spec       Result   "
+prnf "\n ==========================================================================================="
+if (FWID == 1)
+   prnf "\n  Support FW Image Download (Byte: 256; Bit 2=1)   :  Yes"
+else
+   prnf "\n  Support FW Image Download (Byte: 256; Bit 2=0)   :   No"
+endif
+if (DellFWDownL == 0)
+   prnf "              No"
+   if (DellFWDownL == FWID)
+      CsvCheckPoint[61] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[61] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellFWDownL == 1)
+   prnf "             Yes"
+   if (DellFWDownL == FWID)
+      CsvCheckPoint[61] = 1
+      prnf "          Pass"
+   else
+      CsvCheckPoint[61] = 0
+      prnf "          Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device not follow Dell Spec Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+elseif (DellFWDownL == 2)
+   CsvCheckPoint[61] = 2
+   prnf "             NA"; prnf "           NA"
+endif
+prns "\n     Active FW info"
+prnf "\n              06:04                       %d", AFIGo; prns "  (FW slot going to be activated)"
+prnf "\n              02:00                       %d", AFIRun; prns "  (FW slot running)"
+i = 1
+j = 0
+i7 = 0
+
+do
+   FWerror[0] = 0
+   FWerror[1] = 0
+   prnf "\n     FW Revision for Slot %d               ",i;
+   if ( FRS[i] == 0 )
+      prns "0"
+      i+=1
+      j+=8
+   else
+      i5 = 8
+      do
+         if (FWSlotdata[i5+j] == 32)
+            prnf "_"
+         else
+            prnf "%C", FWSlotdata[i5+j]
+         endif
+         if (FWSlotdata[8+j] == 48)
+            FWerror[0] = 1
+         endif
+         i5+=1
+      until (i5 == 16)
+      FRS[10] = (FWSlotdata[8+j]<<56)+(FWSlotdata[9+j]<<48)+(FWSlotdata[10+j]<<40)+(FWSlotdata[11+j]<<32)+(FWSlotdata[12+j]<<24)+(FWSlotdata[13+j]<<16)+(FWSlotdata[14+j]<<8)+FWSlotdata[15+j]
+      if (FWSlotdata[15+j] < 32)
+         FWerror[1] = 1
+      endif
+      prnf "  (%I64X)", FRS[10]
+      if (FWerror[0] == 0 && FWerror[1] == 0)
+         CsvCheckPoint[62+i7] = 2
+         prnf "             Pass"
+      else
+         CsvCheckPoint[62+i7] = 1
+         prnf "             Fail***"
+         if (FWerror[0] == 1 && FWerror[1] == 0)
+            prnf "\n      +++++ Fail: FW shall be no leading 0 (ASCII 30h)"
+         elseif (FWerror[0] == 0 && FWerror[1] == 1)
+            prnf "\n      +++++ Fail: Not space character to the right(ASCII 20h)"
+         elseif (FWerror[0] == 1 && FWerror[1] == 1)
+            prnf "\n      +++++ Fail: FW shall be no leading 0 (ASCII 30h)"
+            prnf "\n      +++++ Fail: Not space character to the right(ASCII 20h)"
+         endif
+      endif
+      i+=1
+      j+=8
+   endif
+   i7+=1
+until (i==8)
+prns "\n"
+prnf "\n     *****Note: '_' stands for null character (20h)"
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[61] >= 1 && CsvCheckPoint[62] >= 1 && CsvCheckPoint[62] != 1 && CsvCheckPoint[63] != 1 && CsvCheckPoint[64] != 1 && CsvCheckPoint[65] != 1 && CsvCheckPoint[66] != 1 && CsvCheckPoint[67] != 1 && CsvCheckPoint[68] != 1 )
+   prnf "\nDell Firmware Slot Information:, PASS"
+else
+   prnf "\nDell Firmware Slot Information:, FAIL"
+endif
+
+if (CsvCheckPoint[61] == 1)
+   prnf "\n Support FW Image Download:, PASS"
+elseif (CsvCheckPoint[61] == 2)
+   prnf "\n Support FW Image Download:, NA"
+else
+   prnf "\n Support FW Image Download:, FAIL"
+endif
+i7 = 0
+do
+   if (CsvCheckPoint[62+i7] > 0)
+      if (CsvCheckPoint[62+i7] == 2)
+         prnf "\n FW Revision for Slot %d :, PASS", i7+1;
+      elseif (CsvCheckPoint[62+i7] == 1)
+         prnf "\n FW Revision for Slot %d :, FAIL", i7+1;
+      endif
+   endif
+   i7+=1
+until (i7 == 7)
+endexport
+
+
+prns "\n"
+prns "\n"
+INNVMHBA 8,HBAVer
+NVM_Idfy_Ctrlr
+i = 516
+do
+   RU "ReadA",i,Datavalue[i];
+   i+=1
+until (i == 520)
+prns "\n Test Case 7: Dell NVMe Feature Requirements Table"
+prnf "\n                                                     Value    Default    Dell Spec   Default   Result   "
+prnf "\n ======================================================================================================="
+NN = (Datavalue[519]<<24)+(Datavalue[518]<<16)+(Datavalue[517]<<8)+Datavalue[516]
+if (NN == 0)
+   prnf "\n  Support Namespaces (IDFY 516-519; "; prnf "%8.8Xh)",NN; prnf "     :   No"
+else
+   prnf "\n  Support Namespaces (IDFY 516-519; "; prnf "%8.8Xh)",NN; prnf "     :  Yes"
+endif
+prnf "         %d",NN
+prnf "         Yes"; prnf "         %d",DellNSDefault
+if (NN == 0)
+   CsvCheckPoint[71] = 0
+   prnf "      Fail***"
+   prnf "\n      +++++ Fail: The Device not support Namespace"
+   prnf "\n"
+   prnf "\n"
+else
+   if (DellNSSup == NN && DellNSDefault == NN)
+      CsvCheckPoint[71] = 1
+      prnf "      Pass"
+   else
+      CsvCheckPoint[71] = 0
+      prnf "      Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device Namespace number less than Dell Default %d", DellNSDefault
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+NVM_GETF_SEL = 0
+NVM_GETF_NUMQ
+idata[0] = NVM_CQE_DW0
+prnf "\n  Command Queues (Get Feature Number of Queue;"; prnf " %8.8Xh)",idata[0]
+if (code)
+   CsvCheckPoint[72] = 2
+   CsvCheckPoint[73] = 2
+   prnf "\n     I/O Submission Queues                         :   No      NA"
+   prnf "          Yes"; prnf "         %d",DellSQNum
+   prnf "      NA"
+   prnf "\n     I/O Completion Queues                         :   No      NA"
+   prnf "          Yes"; prnf "         %d",DellCQNum
+   prnf "      NA"
+else
+   prnf "\n     I/O Submission Queues                         :  Yes"
+   CurrentNCQA = (idata[0] >> 16)
+   CurrentNSQA = (idata[0]&0ffffh)
+   prnf "        %2d",CurrentNSQA+1
+   prnf "         Yes"; prnf "         %d",DellSQNum
+   if (CurrentNSQA+1 >= DellSQNum)
+      CsvCheckPoint[72] = 1
+      prnf "      Pass"
+   else
+      CsvCheckPoint[72] = 0
+      prnf "      Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device SQ less than Dell Deafault %d", DellSQNum
+      prnf "\n"
+      prnf "\n"
+   endif
+   prnf "\n     I/O Completion Queues                         :  Yes"
+   prnf "        %2d",CurrentNCQA+1
+   prnf "         Yes"; prnf "         %d",DellCQNum
+   if (CurrentNCQA+1 >= DellCQNum)
+      CsvCheckPoint[73] = 1
+      prnf "      Pass"
+   else
+      CsvCheckPoint[73] = 0
+      prnf "      Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The Device CQ less than Dell Deafault %d", DellCQNum
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+inichcs 34h,g0
+g0=g0&0ffh
+inichcs g0,g1
+do
+   g3=(g1&0ff00h)>>8
+   g2=g1&0ffh
+   if (g2==01h) 
+      g0 = g3
+   elseif (g2==05h) 
+      g0 = g3
+   elseif (g2==10h) 
+      g0=g0+12
+      inichcs g0,i0
+   elseif (g2==11h) 
+      g0 = g3
+   endif
+   inichcs (g1>>8)&0ffh,g1
+   g0=g3
+until (g3==0)
+
+inichcs 100h,g1
+do
+   g3=g1>>20
+   g2=g1&0ffffh
+   if (g2==0001h)
+      g0 = g3
+   elseif (g2==0003h)
+      g0 = g3
+   elseif (g2==0004h)
+      g0 = g3
+   elseif (g2==000Eh)
+      g0 = g3
+   elseif (g2==0018h)
+      g0 = g3
+   elseif (g2==0019h)
+      g0 = g3
+   elseif (g2==001eh)
+      g0=g0+4
+      inichcs g0,g5
+   endif
+   inichcs g3,g1
+   g0=g3
+until (g3==0)
+ASPML12Spt = (g5>>2)&01h
+ASPML11Spt = (g5>>3)&01h
+ASPML1Spt = (g5>>4)&01h
+//ASPMSpt = (i0>>22)&1
+LevelASPMSpt = ((i0>>10)&02)
+if (LevelASPMSpt <= 1 || ASPML12Spt == 0 || ASPML1Spt == 0)
+   prnf "\n  Support Active State Power Management            :   No"
+   ASPMSUP = 0
+elseif (LevelASPMSpt >= 2 && ASPML12Spt == 1 && ASPML1Spt == 1) 
+   prnf "\n  Support Active State Power Management            :  Yes"
+   ASPMSUP = 1
+endif
+inichcs 128,i0;
+ASPM = ((i0>>0)&0fh)
+inichcs 392,i1;
+ASPML12En = (i1>>2)&1
+ASPML11En = (i1>>3)&1
+
+if (ASPM == 0 || ASPML12En == 0 || ASPML11En == 0)
+   prnf "     Disable"
+   ASPMEn = 0
+elseif (ASPM >= 1 && ASPML12En == 1 && ASPML11En == 1)
+   prnf "      Enable"
+   ASPMEn = 1
+endif
+if (DellASPMSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellASPMDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellASPMDefault == ASPMEn && ASPMSUP == DellASPMSUP)
+   CsvCheckPoint[74] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[74] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (ASPMSUP == 1 && DellASPMSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (ASPMSUP == 0 && DellASPMSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (ASPMEn == 0 && DellASPMDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (ASPMEn == 1 && DellASPMDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+if (LevelASPMSpt == 1)
+   prnf "\n     ASPM Support (PXLCAP Bit 11:10=01b)           :  Yes"
+elseif (LevelASPMSpt == 2)
+   prnf "\n     ASPM Support (PXLCAP Bit 11:10=10b)           :  Yes"
+elseif (LevelASPMSpt == 3)
+   prnf "\n     ASPM Support (PXLCAP Bit 11:10=11b)           :  Yes"
+elseif (LevelASPMSpt == 0)
+   prnf "\n     ASPM Support (PXLCAP Bit 11:10=00b)           :   No"
+endif
+if (LevelASPMSpt == 1)
+   prnf "\n     ASPM Level (PXLCAP Bit 11:10=01b)             :  Yes"
+elseif (LevelASPMSpt == 2)
+   prnf "\n     ASPM Level (PXLCAP Bit 11:10=10b)             :  Yes"
+elseif (LevelASPMSpt == 3)
+   prnf "\n     ASPM Level (PXLCAP Bit 11:10=11b)             :  Yes"
+elseif (LevelASPMSpt == 0)
+   prnf "\n     ASPM Level (PXLCAP Bit 11:10=00b)             :   No"
+endif
+if (ASPML1Spt == 1)
+   prnf "\n     L1 PM Substates Supported (L1PMSCAP Bit 4=1)  :  Yes"
+else
+   prnf "\n     L1 PM Substates Supported (L1PMSCAP Bit 4=0)  :   No"
+endif
+if (ASPML11Spt == 1)
+   prnf "\n     ASPM L1.1 Supported (L1PMSCAP Bit 3=1)        :  Yes"
+else
+   prnf "\n     ASPM L1.1 Supported (L1PMSCAP Bit 3=0)        :   No"
+endif
+if (ASPML12Spt == 1)
+   prnf "\n     ASPM L1.2 Supported (L1PMSCAP Bit 2=1)        :  Yes"
+else
+   prnf "\n     ASPM L1.2 Supported (L1PMSCAP Bit 2=0)        :   No"
+endif
+if (ASPM == 0)
+   prnf "\n     ASPM Control Enabled (PXLC Bit 1:0=00b)       :   No"
+elseif (ASPM == 1)
+   prnf "\n     L0s Entry Enabled (PXLC Bit 1:0=01b)          :  Yes"
+elseif (ASPM == 2)
+   prnf "\n     L1 Entry Enabled (PXLC Bit 1:0=10b)           :  Yes"
+elseif (ASPM == 3)
+   prnf "\n     L0s and L1 Entry Enabled (PXLC Bit 1:0=11b)   :  Yes"
+endif
+if (ASPML11En == 1)
+   prnf "\n     ASPM L1.1 Enabled (L1PMSC1 Bit 3=1)           :  Yes"
+else
+   prnf "\n     ASPM L1.1 Enabled (L1PMSC1 Bit 3=0)           :   No"
+endif
+if (ASPML12En == 1)
+   prnf "\n     ASPM L1.2 Enabled (L1PMSC1 Bit 2=1)           :  Yes"
+else
+   prnf "\n     ASPM L1.2 Enabled (L1PMSC1 Bit 2=0)           :   No"
+endif
+
+NVM_Idfy_Ctrlr
+RU "ReadA",265,i0;
+if (i0 == 1)
+   prnf "\n  Support Auto PS Transition (IDFY 265; Bit 0=1)   :  Yes"
+else
+   prnf "\n  Support Auto PS Transition (IDFY 265; Bit 0=0)   :   No"
+endif
+NVM_GETF_SEL = 0
+NVM_GETF 0Ch;
+idata[0] = NVM_CQE_DW0
+CurrentAPSTE = (idata[0] >> 0) & 1
+if (CurrentAPSTE == 0)
+   prnf "     Disable"
+else
+   prnf "      Enable"
+endif
+
+if (DellAPSTSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellAPSTDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellAPSTDefault == CurrentAPSTE && DellAPSTSUP == i0)
+   CsvCheckPoint[75] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[75] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (i0 == 1 && DellAPSTSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (i0 == 0 && DellAPSTSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentAPSTE == 0 && DellAPSTDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable' (Note: This Feature maybe Enabled by BIOS)"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentAPSTE == 1 && DellAPSTDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable' (Note: This Feature maybe Enabled by BIOS)"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+if (CurrentAPSTE == 0)
+   prnf "\n     APST (Get Feature Autonomous Power State Bit 0=0 on DW0) = Disable"
+else
+   prnf "\n     APST (Get Feature Autonomous Power State Bit 0=1 on DW0) =  Enable"
+endif
+
+RU "ReadA",520,i0;
+ONCS = i0>>4&01h
+Resersupport = i0>>5&01h
+if (ONCS == 1)
+   prnf "\n  Feature Persistence (IDFY 520; "; prnf "Bit 4=%X)",ONCS; prnf "          :  Yes"
+else
+   prnf "\n  Feature Persistence (IDFY 520; "; prnf "Bit 4=%X)",ONCS; prnf "          :   No"
+endif
+if (ONCS == 0)
+   prnf "        NA  "
+else
+   prnf "        *1  "
+endif
+if (DellFPSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellFPDefault == 0)
+   prnf "      Disable"
+else
+   prnf "         *1  "
+endif
+if (DellFPDefault == ONCS && DellFPSUP == ONCS)
+   prnf "   (To Be Tested in Case 8)"
+else
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (ONCS == 1 && DellFPSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (ONCS == 0 && DellFPSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (ONCS == 0 && DellFPDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (ONCS == 1 && DellFPDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+RU "ReadA",524,i0;
+CE = i0>>2&01h
+SE = i0>>1&01h
+LLF = i0>>0&01h
+if (SEDSpt == 0)
+   prnf "\n  Format NVM (non-SED SSD)"
+else
+   prnf "\n  Format NVM (SED SSD)"
+endif
+if (CE == 1)
+   prnf "\n     Cryptographic Erase (IDFY 524; Bit 2=1)       :  Yes"
+else
+   prnf "\n     Cryptographic Erase (IDFY 524; Bit 2=0)       :   No"
+endif
+if (CE == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (SEDSpt == 0)
+   prnf "  Optional"
+else
+   if (DellCESUP == 0)
+      prnf "        No"
+   else
+      prnf "       Yes"
+   endif
+endif
+if (DellCEDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (SEDSpt == 0)
+   CsvCheckPoint[76] = 1
+   prnf "   Pass"
+else
+   if (DellCEDefault == CE && DellCESUP == CE)
+      CsvCheckPoint[76] = 1
+      prnf "   Pass"
+   else
+      CsvCheckPoint[76] = 0
+      prnf "   Fail***"
+      ErrCnt+=1
+      if (CE == 1 && DellCESUP == 0)
+         prnf "\n      +++++ Fail: The device Value should be 'No'"
+         prnf "\n"
+         prnf "\n"
+      elseif (CE == 0 && DellCESUP == 1)
+         prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+         prnf "\n"
+         prnf "\n"
+      elseif (CE == 0 && DellCEDefault == 1)
+         prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+         prnf "\n"
+         prnf "\n"
+      elseif (CE == 1 && DellCEDefault == 0)
+         prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   endif
+endif
+if (SE == 1)
+   prnf "\n     Secure Erase (IDFY 524; Bit 1=1)              :  Yes"
+else
+   prnf "\n     Secure Erase (IDFY 524; Bit 1=0)              :  Yes"
+endif
+if (SE > 1)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellSESUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellSEDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellSEDefault >= SE && DellSESUP >= SE)
+   CsvCheckPoint[77] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[77] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (SE <= 1 && DellSESUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (SE > 1 && DellSEDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (SE <= 1 && DellSEDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (LLF == 1)
+   prnf "\n     Low Level Format (IDFY 524; Bit 0=1)          :  Yes"
+else
+   prnf "\n     Low Level Format (IDFY 524; Bit 0=0)          :  Yes"
+endif
+if (LLF > 1)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellLLFSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellLLFDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellLLFDefault >= LLF && DellLLFSUP >= LLF)
+   CsvCheckPoint[78] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[78] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (LLF <= 1 && DellLLFSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (LLF > 0 && DellLLFDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (LLF <= 1 && DellLLFDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+RU "ReadA",328,i0;
+OverES = i0>>2&01h
+BlockES = i0>>1&01h
+CryptoES = i0>>0&01h
+if (SEDSpt == 0)
+   prnf "\n  Sanitize (non-SED SSD)"
+else
+   prnf "\n  Sanitize (SED SSD)"
+endif
+if (BlockES == 1)
+   prnf "\n     Block Erase sanitize (IDFY 328; Bit 1=1)      :  Yes"
+else
+   prnf "\n     Block Erase sanitize (IDFY 328; Bit 1=0)      :   No"
+endif
+if (BlockES == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellBESSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellBESDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellBESDefault == BlockES && DellBESSUP == BlockES)
+   CsvCheckPoint[79] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[79] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (BlockES == 1 && DellBESSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (BlockES == 0 && DellBESSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (BlockES == 0 && DellBESDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (BlockES == 1 && DellBESDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (CryptoES == 1)
+   prnf "\n     Crypto Erase sanitize (IDFY 328; Bit 0=1)     :  Yes"
+else
+   prnf "\n     Crypto Erase sanitize (IDFY 328; Bit 0=0)     :   No"
+endif
+if (CryptoES == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (SEDSpt == 0)
+   prnf "  Optional"
+else
+   if (DellCESSUP == 0)
+      prnf "        No"
+   else
+      prnf "       Yes"
+   endif
+endif
+if (DellCESDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (SEDSpt == 0)
+   CsvCheckPoint[710] = 1
+   prnf "   Pass"
+else
+   if (DellCESDefault == CryptoES && DellCESSUP == CryptoES)
+      CsvCheckPoint[710] = 1
+      prnf "   Pass"
+   else
+      CsvCheckPoint[710] = 0
+      prnf "   Fail***"
+      ErrCnt+=1
+      if (CryptoES == 1 && DellCESSUP == 0)
+         prnf "\n      +++++ Fail: The device Value should be 'No'"
+         prnf "\n"
+         prnf "\n"
+      elseif (CryptoES == 0 && DellCESSUP == 1)
+         prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+         prnf "\n"
+         prnf "\n"
+      elseif (CryptoES == 0 && DellCESDefault == 1)
+         prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+         prnf "\n"
+         prnf "\n"
+      elseif (CryptoES == 1 && DellCESDefault == 0)
+         prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   endif
+endif
+
+if (OverES == 1)
+   prnf "\n     Overwrite sanitize (IDFY 328; Bit 2=1)        :  Yes"
+else
+   prnf "\n     Overwrite sanitize (IDFY 328; Bit 2=0)        :   No"
+endif
+if (OverES == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellOSSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellOSDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellOSDefault == OverES && DellOSSUP == OverES)
+   CsvCheckPoint[711] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[711] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (OverES == 1 && DellOSSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (OverES == 0 && DellOSSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (OverES == 0 && DellOSDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (OverES == 1 && DellOSDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+i0=NVM_CMD_NSID
+if (nvm_smart_ns==0) nvm_cmd_nsid=0ffffffffh else nvm_cmd_nsid=1 endif
+NVM_GETLOG_SMART
+nvm_cmd_nsid=i0
+copy "ReadA","Read"
+g0 = 0
+SmartOffset = 0
+do
+   RU "ReadA", SmartOffset, Smartdata[g0]
+   SmartOffset+=1
+   g0+=1
+until (SmartOffset == 3)
+TempInfo = (Smartdata[2]<<8)+Smartdata[1]
+if (TempInfo > 0)
+   prnf "\n  Temperature Threshold                            :  Yes"
+   TempInfo = 1
+else
+   prnf "\n  Temperature Threshold                            :   No"
+   TempInfo = 0
+endif
+if (TempInfo == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellTTSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellTTDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellTTDefault == TempInfo && DellTTSUP == TempInfo)
+   CsvCheckPoint[712] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[712] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (TempInfo == 1 && DellTTSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (TempInfo == 0 && DellTTSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (TempInfo == 0 && DellTTDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (TempInfo == 1 && DellTTDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+OverThre = 0
+UnderThre = 0
+NVM_CMD_NSID=0ffffffffh
+NVM_GETLOG_SMART
+copy "ReadA","Read"
+rpoint = 200
+i0=3
+rrw i0;rpoint+=2
+NVM_CMD_NSID = 0
+nvm_getf_sel = 0
+nvm_getf_tmpthld 0,0
+OverThre = nvm_cqe_dw0
+nvm_getf_tmpthld 1,0
+UnderThre = nvm_cqe_dw0
+prnf "\n     Sensor #0 Current Over/Under Temp Threshold   : "
+if (OverThre == 0)
+   prnf " %3.2dK", OverThre
+else
+   prnf " %2dC", OverThre-273
+endif
+if (UnderThre == 0)
+   prnf "/%3.2dK", UnderThre
+else
+   prnf "/%2dC", UnderThre-273
+endif
+
+NVM_GETF_SEL = 0
+NVM_GETF_ASYNCFG
+idata[0] = NVM_CQE_DW0
+CurrentSHCW = (idata[0] >> 0) & 0FFh
+if (NVM_STATUS_CODE)
+   prnf "\n  Asynchronous Event Config (Feature 0Bh; "; prnf "Code=%d)",NVM_STATUS_CODE; prnf "  :   No"
+   i0 = 0
+else
+   prnf "\n  Asynchronous Event Config (Feature 0Bh; "; prnf "Code=%d)",NVM_STATUS_CODE; prnf "  :  Yes"
+   i0 = 1
+endif
+if (CurrentSHCW == 0)
+   prnf "     Disable"
+else
+   prnf "      Enable"
+endif
+if (DellAECSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellAECDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+
+if (DellAECDefault <= CurrentSHCW && DellAECSUP == i0)
+   CsvCheckPoint[713] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[713] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (i0 == 1 && DellAECSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (i0 == 0 && DellAECSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentSHCW == 0 && DellAECDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentSHCW == 1 && DellAECDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+i = 0
+j = 0
+do
+   CriticalWarning[i] = Smartdata[0]>>j&1
+   i+=1
+   j+=1
+until (i == 5)
+if (CriticalWarning[0] == 1)
+   prnf "\n     Available spare space has fallen below the threshold (Get Feature 0Bh DW0 Bit 0=1)     : Enable"
+else
+   prnf "\n     Available spare space has fallen below the threshold (Get Feature 0Bh DW0 Bit 0=0)     : Disable"
+endif
+if (CriticalWarning[1] == 1)
+   prnf "\n     SSD Temperature is above or below a temperature threshold (Get Feature 0Bh DW0 Bit 1=1): Enable"
+else
+   prnf "\n     SSD Temperature is above or below a temperature threshold (Get Feature 0Bh DW0 Bit 1=0): Disable"
+endif
+if (CriticalWarning[2] == 1)
+   prnf "\n     NVM subsystem reliability has been degraded (Get Feature 0Bh DW0 Bit 2=1)              : Enable"
+else
+   prnf "\n     NVM subsystem reliability has been degraded (Get Feature 0Bh DW0 Bit 2=0)              : Disable"
+endif
+if (CriticalWarning[3] == 1)
+   prnf "\n     SSD media has been placed in read only mode (Get Feature 0Bh DW0 Bit 3=1)              : Enable"
+else
+   prnf "\n     SSD media has been placed in read only mode (Get Feature 0Bh DW0 Bit 3=0)              : Disable"
+endif
+
+NVM_GETF_SEL = 0
+NVM_GETF_WRCACHE
+idata[0] = NVM_CQE_DW0
+CurrentDN = (idata[0] >> 0) & 0Fh
+NVM_Idfy_Ctrlr
+RU "ReadA",525,i0;
+i0 = (i0 >> 0)&1
+if (i0 == 0)
+   prnf "\n  Volatile Wr Cache (IDFY 525; Bit 0=0; "; prnf "%8.8Xh)",idata[0]; prnf " :   No"
+else
+   prnf "\n  Volatile Wr Cache (IDFY 525; Bit 0=1; "; prnf "%8.8Xh)",idata[0]; prnf " :  Yes"
+endif
+if (CurrentDN == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellVWCSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellVWCDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellVWCDefault == CurrentDN && DellVWCSUP == i0)
+   CsvCheckPoint[714] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[714] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (i0 == 1 && DellVWCSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (i0 == 0 && DellVWCSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentDN == 0 && DellVWCDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentDN == 1 && DellVWCDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+if (CurrentDN == 0)
+   prnf "\n     Volatile Write Cache Enable (Get Feature Volatile Write Cache(06h) Bit 0=0 on DW0) :  No"
+else
+   prnf "\n     Volatile Write Cache Enable (Get Feature Volatile Write Cache(06h) Bit 0=1 on DW0) : Yes"
+endif
+
+
+nvm_cmd_nsid = 1
+nvm_idfy 00h
+RU "ReadA",28,i0;
+RU "ReadA",29,i1;
+E2EInfo = (i1<<8)+i0
+if (i0 == 0)
+   prnf "\n  E2E Data Protect (IDFY NS Byte 28-29; "; prnf "%4.4Xh)", E2EInfo; prnf "     :   No"
+else
+   prnf "\n  E2E Data Protect (IDFY NS Byte 28-29; "; prnf "%4.4Xh)", E2EInfo; prnf "     :  Yes"
+endif
+if (i1 == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellEDPSUP == 0)
+   prnf "        No"
+elseif (DellEDPSUP == 1)
+   prnf "       Yes"
+elseif (DellEDPSUP == 2)
+   prnf "        NR"
+endif
+if (DellEDPDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellEDPDefault == i1 && DellEDPSUP == i0)
+   CsvCheckPoint[715] = 1
+   prnf "   Pass"
+elseif (DellEDPSUP == 2)
+   CsvCheckPoint[715] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[715] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (i0 == 1 && DellEDPSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (i0 == 0 && DellEDPSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (i1 == 0 && DellEDPDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (i1 == 1 && DellEDPDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+nvm_cmd_nsid = 0
+if (Resersupport == 0)
+   prnf "\n  Reservations (IDFY 520; Bit 5=0)                 :   No"
+else
+   prnf "\n  Reservations (IDFY 520; Bit 5=1)                 :  Yes"
+endif
+if (Resersupport == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellResSUP == 0)
+   prnf "        No"
+elseif (DellResSUP == 1)
+   prnf "       Yes"
+elseif (DellResSUP == 2)
+   prnf "        NR"
+endif
+if (DellResDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellResDefault == Resersupport && DellResSUP == Resersupport)
+   CsvCheckPoint[716] = 1
+   prnf "   Pass"
+elseif (DellResSUP == 2)
+   CsvCheckPoint[716] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[716] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (Resersupport == 1 && DellResSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (Resersupport == 0 && DellResSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (Resersupport == 0 && DellResDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (Resersupport == 1 && DellResDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+NVM_Idfy_Ctrlr
+i = 272
+do
+   RU "ReadA",i,Datavalue[i];
+   i+=1
+until (i == 320)
+HMB = (Datavalue[275]<<24)+(Datavalue[274]<<16)+(Datavalue[273]<<8)+Datavalue[272]
+NVM_GETF_SEL = 0
+NVM_GETF 0Dh;
+if (HMB == 0)
+   prnf "\n  Host Memory Buffer (IDFY 272-275; "; prnf "%8.8Xh)", HMB; prnf "     :   No"
+else
+   prnf "\n  Host Memory Buffer (IDFY 272-275; "; prnf "%8.8Xh)", HMB; prnf "     :  Yes"
+endif
+idata[0] = NVM_CMD_DW11
+idata[1] = NVM_CMD_DW12
+CurrentEHM = (idata[0] >> 0) & 0Fh
+CurrentHSIZE = (idata[49] >> 0)
+if (CurrentEHM == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellHMBSUP == 0)
+   prnf "  Optional"
+else
+   prnf "       Yes"
+endif
+if (DellHMBDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellHMBDefault == CurrentEHM)
+   CsvCheckPoint[717] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[717] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (HMB == 1 && DellHMBSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (HMB == 0 && DellHMBSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentEHM == 0 && DellHMBDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (CurrentEHM == 1 && DellHMBDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+RU "ReadA",312,i0;
+RU "ReadA",313,i1;
+RU "ReadA",314,i2;
+RU "ReadA",315,i3;
+RPMBS = (i3<<24)+(i2<<16)+(i1<<8)+i0
+if (nvm_rpmb_spt == 0)
+   prnf "\n  Re-Protected Memory Blk(IDFY 312-315; "; prnf "%8.8Xh)", RPMBS; prnf " :   No"
+else
+   prnf "\n  Re-Protected Memory Blk(IDFY 312-315; "; prnf "%8.8Xh)", RPMBS; prnf " :  Yes"
+endif
+if (RPMBS == 0)
+   prnf "     Disable"
+else
+   prnf "      Enable"
+endif
+if (DellRPMBSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellRPMBDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellRPMBDefault == RPMBS && DellRPMBSUP == RPMBS)
+   CsvCheckPoint[718] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[718] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (nvm_rpmb_spt == 1 && DellRPMBSUP == 0 && DellRPMBDefault == 1 && RPMBS == 1 )
+      prnf "\n      +++++ Fail: The device Value should be not support Re-Protected Memory Blk"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 1 && DellRPMBSUP == 0 && DellRPMBDefault == 1 && RPMBS == 0 )
+      prnf "\n      +++++ Fail: The device Value should be not support Re-Protected Memory Blk"
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 1 && DellRPMBSUP == 0 && DellRPMBDefault == 0 && RPMBS == 1 )
+      prnf "\n      +++++ Fail: The device Value should be not support Re-Protected Memory Blk"
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 1 && DellRPMBSUP == 0 && DellRPMBDefault == 0 && RPMBS == 0)
+      prnf "\n      +++++ Fail: The device Value should be not support Re-Protected Memory Blk"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 0 && DellRPMBSUP == 1 && DellRPMBDefault == 1 && RPMBS == 1 )
+      prnf "\n      +++++ Fail: The device Value should be support Re-Protected Memory Blk"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 0 && DellRPMBSUP == 1 && DellRPMBDefault == 1 && RPMBS == 0 )
+      prnf "\n      +++++ Fail: The device Value should be support Re-Protected Memory Blk"
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 0 && DellRPMBSUP == 1 && DellRPMBDefault == 0 && RPMBS == 1 )
+      prnf "\n      +++++ Fail: The device Value should be support Re-Protected Memory Blk"
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (nvm_rpmb_spt == 0 && DellRPMBSUP == 1 && DellRPMBDefault == 0 && RPMBS == 0)
+      prnf "\n      +++++ Fail: The device Value should be support Re-Protected Memory Blk"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+i0=0h
+i=0
+do
+   InNvmHba i0,Data[i];
+   i0+=4
+   i+=1
+until (i0 == 80)
+BootPar = Data[1]>>13&1
+if (BootPar == 0)
+   prnf "\n  Boot Partitions (NVM Reg 0-7; Bit 45=0)          :   No"
+else
+   prnf "\n  Boot Partitions (NVM Reg 0-7; Bit 45=1)          :  Yes"
+endif
+if (BootPar == 0)
+   prnf "     Disable"
+else
+   prnf "      Enable"
+endif
+if (DellBPSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellBPDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellBPDefault == BootPar && DellBPSUP == BootPar)
+   CsvCheckPoint[719] = 1
+   bootSpt = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[719] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (BootPar == 1 && DellBPSUP == 0 && DellBPDefault == 1)
+      prnf "\n      +++++ Fail: The device Value should be not support Boot Partitikons"
+      bootSpt = 0
+      prnf "\n"
+      prnf "\n"
+   elseif (BootPar == 1 && DellBPSUP == 0 && DellBPDefault == 0)
+      prnf "\n      +++++ Fail: The device Value should be not support Boot Partitikons"
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      bootSpt = 0
+      prnf "\n"
+      prnf "\n"
+   elseif (BootPar == 1 && DellBPSUP == 1 && DellBPDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (BootPar == 0 && DellBPSUP == 1 && DellBPDefault == 0)
+      prnf "\n      +++++ Fail: The device Value should be support Boot Partitikons"
+      bootSpt = 0
+      prnf "\n"
+      prnf "\n"
+   elseif (BootPar == 0 && DellBPSUP == 1 && DellBPDefault == 1)
+      prnf "\n      +++++ Fail: The device Value should be support Boot Partitikons"
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      bootSpt = 0
+      prnf "\n"
+      prnf "\n"
+   elseif (BootPar == 0 && DellBPSUP == 0 && DellBPDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+bootszie = ((Data[16]>>0)&0ffffh)
+bootszie = (bootszie/512)*128
+prnf "\n     Boot Partition Size             = %3d MiB", bootszie
+if (bootSpt == 1)
+   if (bootszie >= 256)
+      prnf "                                                 Pass"
+      CsvCheckPoint[7191] = 1
+   elseif  (bootszie < 256)
+      prnf "                                                 Fail***"
+      prnf "\n         +++++ Fail: The Boot Partition Size should be = '256 MiB'"
+      CsvCheckPoint[7191] = 0
+      prnf "\n"
+      prnf "\n"
+   endif
+else
+   prnf "                                                 NA"
+   prnf "\n         Note: The Boot Partition function not support, not test"
+   CsvCheckPoint[7191] = 2
+endif
+
+
+prnf "\n     FW commit with Commit Action    = 110b"
+if (bootSpt == 1)
+   FWUGVal = (Datavalue[319]*4)*1024-1
+   nvm_fw_dnld FWUGVal,0
+   if (nvm_status_code != 0)
+      j8 = 1
+      goto checkboot;
+   endif
+   nvm_fw_cmt 6h,0
+   checkboot:
+   if (nvm_status_code == 0)
+      prnf "                                                    Pass"
+      CsvCheckPoint[7192] = 1
+   else
+      CsvCheckPoint[7192] = 0
+      prnf "                                                    Fail***"
+      if (j8 == 1)
+         prnf "\n         +++++ FAIL: The FW Image Download command should be successful completion"
+         prnf "\n            Expected: StatusType = %Xh;", NVM_STATUS_TYPE
+         prnf " StatusCode = %2.2Xh -- ", NVM_STATUS_CODE
+         NVM_GETSTATUSINFO NVM_STATUS_TYPE, NVM_STATUS_CODE
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "\n         +++++ FAIL: The FW Commit command should be successful completion"
+         prnf "\n            Expected: StatusType = %Xh;", NVM_STATUS_TYPE
+         prnf " StatusCode = %2.2Xh -- ", NVM_STATUS_CODE
+         NVM_GETSTATUSINFO NVM_STATUS_TYPE, NVM_STATUS_CODE
+         prnf "\n"
+         prnf "\n"
+       endif
+   endif
+else
+   prnf "                                                    NA"
+   prnf "\n         Note: The Boot Partition function not support, not test"
+   CsvCheckPoint[7192] = 2
+endif
+
+
+prnf "\n     FW commit with Commit Action    = 111b"
+if (bootSpt == 1)
+   nvm_fw_cmt 7h,0
+   if (nvm_status_code == 0)
+      prnf "                                                    Pass"
+      CsvCheckPoint[7193] = 1
+   else
+      CsvCheckPoint[7193] = 0
+      prnf "                                                    Fail***"
+      prnf "\n         +++++ FAIL: The command should be successful completion"
+      prnf "\n            Expected: StatusType = %Xh;", NVM_STATUS_TYPE
+      prnf " StatusCode = %2.2Xh -- ", NVM_STATUS_CODE
+      NVM_GETSTATUSINFO NVM_STATUS_TYPE, NVM_STATUS_CODE
+      prnf "\n"
+      prnf "\n"
+   endif
+else
+   prnf "                                                    NA"
+   prnf "\n         Note: The Boot Partition function not support, not test"
+   CsvCheckPoint[7193] = 2
+endif
+
+NVM_Idfy_Ctrlr
+RU "ReadA",256,i0;
+NSMgt = i0>>3&1
+if (NSMgt == 0)
+   prnf "\n  Namespace Management (IDFY 256; Bit 3=0)         :   No"
+else
+   prnf "\n  Namespace Management (IDFY 256; Bit 3=1)         :  Yes"
+endif
+if (NSMgt == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellNMSUP == 0)
+   prnf "        No"
+elseif (DellNMSUP == 1)
+   prnf "       Yes"
+elseif (DellNMSUP == 2)
+   prnf "        NR"
+endif
+if (DellNMDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellNMDefault == NSMgt && DellNMSUP == NSMgt)
+   CsvCheckPoint[720] = 1
+   prnf "   Pass"
+elseif (DellNMSUP == 2)
+   CsvCheckPoint[720] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[720] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (NSMgt == 1 && DellNMSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (NSMgt == 0 && DellNMSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (NSMgt == 0 && DellNMDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (NSMgt == 1 && DellNMDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+RU "ReadA",322,i0;
+HCTM = i0>>0&1
+if (HCTM == 0)
+   prnf "\n  Host Controlled Thermal Mgt (IDFY 322; Bit 0=0)  :   No"
+else
+   prnf "\n  Host Controlled Thermal Mgt (IDFY 322; Bit 0=1)  :  Yes"
+endif
+if (HCTM == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellHCTMSUP == 0)
+   prnf "        No"
+else
+   prnf "       Yes"
+endif
+if (DellHCTMDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellHCTMDefault == HCTM && DellHCTMSUP == HCTM)
+   CsvCheckPoint[721] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[721] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (HCTM == 1 && DellHCTMSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (HCTM == 0 && DellHCTMSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   elseif (HCTM == 0 && DellHCTMDefault == 1)
+      prnf "\n      +++++ Fail: The device Default should be = 'Enable'"
+      prnf "\n"
+      prnf "\n"
+   elseif (HCTM == 1 && DellHCTMDefault == 0)
+      prnf "\n      +++++ Fail: The device Default should be = 'Disable'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+RU "ReadA",96,i0;
+NOPSSpt = i0>>1&1
+NVM_GETF_SEL = 0
+NVM_GETF 11h;
+if (NOPSSpt == 0)
+   prnf "\n  Non-Operational PS Config (IDFY 96-99; Bit 1=0)  :   No"
+else
+   prnf "\n  Non-Operational PS Config (IDFY 96-99; Bit 1=1)  :  Yes"
+endif
+idata[0] = NVM_CQE_DW0
+CurrentNOPPME = (idata[0] >> 0) & 0Fh
+if (CurrentNOPPME == 0)
+   prnf "        NA  "
+else
+   prnf "      Enable"
+endif
+if (DellNOPSSUP == 1)
+   prnf "  Optional"
+else
+   prnf "       Yes"
+endif
+if (DellNOPSDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellNOPSSUP == NOPSSpt)
+   CsvCheckPoint[722] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[722] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (NOPSSpt == 1 && DellNOPSSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (NOPSSpt == 0 && DellNOPSSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+nvm_getlog 0dh, 0, 0, 2
+nvm_getlog 0dh, 0, 0, 1
+nvm_getlog 0dh, 0, 0, 0
+RU "ReadA",0,PersistentSpt;
+nvm_getlog 0dh, 0, 480,0
+RU "ReadA",0,PELvalue[0];
+RU "ReadA",1,PELvalue[1];
+RU "ReadA",27,PELvalue[2];
+SptEventBitmap = (PELvalue[1]<<8)+PELvalue[0]
+SMARTLogSnapshot = (SptEventBitmap>>1)&1
+FWComEvnet = (SptEventBitmap>>2)&1
+TTChangeEvent = (SptEventBitmap>>3)&1
+PwOnResetEvent = (SptEventBitmap>>4)&1
+NVMSubHWErEvent = (SptEventBitmap>>5)&1
+ChangeNSEvent = (SptEventBitmap>>6)&1
+FmtNVMStartEvent = (SptEventBitmap>>7)&1
+FmtNVMComEvent = (SptEventBitmap>>8)&1
+StizeStartEvent = (SptEventBitmap>>9)&1
+StizeComEvent = (SptEventBitmap>>10)&1
+SFEvent = (SptEventBitmap>>11)&1
+TelLogCreateEvent = (SptEventBitmap>>12)&1
+TheExcurEvent = (SptEventBitmap>>13)&1
+VSEvent = (PELvalue[2]>>6)&1
+
+if (PersistentSpt > 0)
+   prnf "\n  Persistent Event Log (Get Log; %8.8xh)",SptEventBitmap;prnf "        :  Yes      Enable"
+   PersistentSpt = 1
+else
+   prnf "\n  Persistent Event Log (Get Log; %8.8xh)",SptEventBitmap;prnf "        :   No     Disable"
+   PersistentSpt = 0
+endif
+if (DellPersistentSUP == 1)
+   prnf "       Yes"
+else
+   prnf "        No"
+endif
+if (DellPersistentDefault == 0)
+   prnf "      Disable"
+else
+   prnf "       Enable"
+endif
+if (DellPersistentSUP == PersistentSpt)
+   CsvCheckPoint[723] = 1
+   prnf "   Pass"
+else
+   CsvCheckPoint[723] = 0
+   prnf "   Fail***"
+   ErrCnt+=1
+   if (PersistentSpt == 1 && DellPersistentSUP == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (PersistentSpt == 0 && DellPersistentSUP == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+//if (SMARTLogSnapshot == 1)
+//   prnf "\n     SMART/Health Log Snapshot Support (Bit 1=1b)       :  Yes"
+//else
+//   prnf "\n     SMART/Health Log Snapshot Support (Bit 1=0b)       :  No"
+//endif
+//if (FWComEvnet == 1)
+//   prnf "\n     Firmware Commit Event Support (Bit 2=1b)           :  Yes"
+//else
+//   prnf "\n     Firmware Commit Event Support (Bit 2=0b)           :  No"
+//endif
+if (TTChangeEvent == 1)
+   prnf "\n     Timestamp Change Event Support (Bit 3=1b)     :  Yes"
+else
+   prnf "\n     Timestamp Change Event Support (Bit 3=0b)     :   No"
+endif
+if (DellPersistenceLogSUP[3] == 1)
+   prnf "                   Yes"
+else
+   prnf "                    No"
+endif
+if (DellPersistenceLogSUP[3] == TTChangeEvent)
+   CsvCheckPoint[7233] = 1
+   prnf "                Pass"
+else
+   CsvCheckPoint[7233] = 0
+   prnf "                Fail***"
+   ErrCnt+=1
+   if (TTChangeEvent == 1 && DellPersistenceLogSUP[3] == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (TTChangeEvent == 0 && DellPersistenceLogSUP[3] == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (TTChangeEvent == 1)
+   nvm_cmd_nsid = 0
+   nvm_setf_tmstamp
+   nvm_getlog 0dh, 0, 0, 2
+   nvm_getlog 0dh, 0, 0, 1
+   nvm_getlog 0dh, 2, 524,0 //Timestamp
+   g0 = 0
+   do
+      RU "ReadA",g0,PersistentFMT[g0];
+      g0+=1
+   until (g0 == 8)
+   PersistentTime = (PersistentFMT[3]<<24)+(PersistentFMT[2]<<16)+(PersistentFMT[1]<<8)+PersistentFMT[0]
+   prnf "\n        Previous Timestamp (0-7)     = %4.4Xh",PersistentTime
+   PersistentMill = (PersistentFMT[7]<<24)+(PersistentFMT[6]<<16)+(PersistentFMT[5]<<8)+PersistentFMT[4]
+   prnf "\n        MSeconds Since Reset(8-15)   = %4.4Xh",PersistentMill
+endif
+
+//if (PwOnResetEvent == 1)
+//   prnf "\n     Power-On or Reset Event Support (Bit 4=1b)  :  Yes"
+//else
+//   prnf "\n     Power-On or Reset Event Support (Bit 4=0b)  :  No"
+//endif
+//if (NVMSubHWErEvent == 1)
+//   prnf "\n     NVM Subsystem HW Error Event Support (Bit 5=1b)    :  Yes"
+//else
+//   prnf "\n     NVM Subsystem HW Error Event Support (Bit 5=0b)    :  No"
+//endif
+//if (ChangeNSEvent == 1)
+//   prnf "\n     Change Namespace Event Support (Bit 6=1b)   :  Yes"
+//else
+//   prnf "\n     Change Namespace Event Support (Bit 6=0b)   :  No"
+//endif
+if (FmtNVMStartEvent == 1)
+   prnf "\n     Format NVM Start Event Support (Bit 7=1b)     :  Yes"
+else
+   prnf "\n     Format NVM Start Event Support (Bit 7=0b)     :   No"
+endif
+if (DellPersistenceLogSUP[7] == 1)
+   prnf "                   Yes"
+else
+   prnf "                    No"
+endif
+if (DellPersistenceLogSUP[7] == FmtNVMStartEvent)
+   CsvCheckPoint[7237] = 1
+   prnf "                Pass"
+else
+   CsvCheckPoint[7237] = 0
+   prnf "                Fail***"
+   ErrCnt+=1
+   if (FmtNVMStartEvent == 1 && DellPersistenceLogSUP[7] == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (FmtNVMStartEvent == 0 && DellPersistenceLogSUP[7] == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (FmtNVMStartEvent == 1)
+   nvm_fmt_nvm 1,0,0,0,0
+   nvm_getlog 0dh, 0, 0, 2
+   nvm_getlog 0dh, 0, 0, 1
+   nvm_getlog 0dh, 0, 540,0 //start
+   g0 = 0
+   do
+      RU "ReadA",g0,PersistentFMT[g0];
+      g0+=1
+   until (g0 == 6)
+   PersistentNSID = (PersistentFMT[1]<<8)+PersistentFMT[0]
+   prnf "\n        Namespace Identifier (0-3)   = %Xh",PersistentNSID
+   prnf "\n        Format NVM Attributes (4)    = %Xh",PersistentFMT[2]&0fh
+   PersistentFMTCDW = (PersistentFMT[5]<<8)+PersistentFMT[4]
+   prnf "\n        Namespace Identifier (8-11)  = %Xh",PersistentFMTCDW
+endif
+   
+
+if (FmtNVMComEvent == 1)
+   prnf "\n     Format NVM Completion Even Support (Bit 8=1b) :  Yes"
+else
+   prnf "\n     Format NVM Completion Even Support (Bit 8=0b) :   No"
+endif
+if (DellPersistenceLogSUP[8] == 1)
+   prnf "                   Yes"
+else
+   prnf "                    No"
+endif
+if (DellPersistenceLogSUP[8] == FmtNVMComEvent)
+   CsvCheckPoint[7238] = 1
+   prnf "                Pass"
+else
+   CsvCheckPoint[7238] = 0
+   prnf "                Fail***"
+   ErrCnt+=1
+   if (FmtNVMComEvent == 1 && DellPersistenceLogSUP[8] == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (FmtNVMComEvent == 0 && DellPersistenceLogSUP[8] == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (FmtNVMComEvent == 1)
+   nvm_getlog 0dh, 0, 0, 2
+   nvm_getlog 0dh, 0, 0, 1
+   nvm_getlog 0dh, 0, 544,0 //Completion
+   g0 = 0
+   do
+      RU "ReadA",g0,PersistentFMT[g0];
+      g0+=1
+   until (g0 == 6)
+   PersistentNSID = (PersistentFMT[1]<<8)+PersistentFMT[0]
+   prnf "\n        Namespace Identifier (0-3)   = %Xh",PersistentNSID
+   prnf "\n        Smallest Format Progress Indicator (4)   = %xh",PersistentFMT[2]&0fh
+   prnf "\n        Format NVM Status (5)        = %Xh",PersistentFMT[2]>>4&0fh
+   prnf "\n        Completion Information (6-7) = %Xh",PersistentFMT[3]
+   PersistentStaF = (PersistentFMT[5]<<8)+PersistentFMT[4]
+   prnf "\n        Status Field (8-11)          = %Xh",PersistentStaF
+endif
+
+if (StizeStartEvent == 1)
+   prnf "\n     Sanitize Start Event Support (Bit 9=1b)       :  Yes"
+else
+   prnf "\n     Sanitize Start Event Support (Bit 9=0b)       :   No"
+endif
+if (DellPersistenceLogSUP[9] == 1)
+   prnf "                   Yes"
+else
+   prnf "                    No"
+endif
+if (DellPersistenceLogSUP[9] == StizeStartEvent)
+   CsvCheckPoint[7239] = 1
+   prnf "                Pass"
+else
+   CsvCheckPoint[7239] = 0
+   prnf "                Fail***"
+   ErrCnt+=1
+   if (StizeStartEvent == 1 && DellPersistenceLogSUP[9] == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (StizeStartEvent == 0 && DellPersistenceLogSUP[9] == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (StizeStartEvent == 1)
+   nvm_sntz 1,0,0,0,2,0
+   nvm_getlog 0dh, 0, 0, 2
+   nvm_getlog 0dh, 0, 0, 1
+   nvm_getlog 0dh, 0, 548,0 //Completion
+   g0 = 0
+   do
+      RU "ReadA",g0,PersistentFMT[g0];
+      g0+=1
+   until (g0 == 6)
+   PersistentSANICAP = (PersistentFMT[1]<<8)+PersistentFMT[0]
+   prnf "\n        SANICAP (0-3)                = %Xh",PersistentSANICAP
+   PersistentSANCDW10 = (PersistentFMT[3]<<8)+PersistentFMT[2]
+   prnf "\n        Sanitize CDW10 (4-7)         = %Xh",PersistentSANCDW10
+   PersistentSANCDW11 = (PersistentFMT[5]<<8)+PersistentFMT[4]
+   prnf "\n        Sanitize CDW11 (8-11)        = %Xh",PersistentSANCDW11
+endif
+
+if (StizeComEvent == 1)
+   prnf "\n     Sanitize Completion Event Support (Bit 10=1b) :  Yes"
+else
+   prnf "\n     Sanitize Completion Event Support (Bit 10=0b) :   No"
+endif
+if (DellPersistenceLogSUP[10] == 1)
+   prnf "                   Yes"
+else
+   prnf "                    No"
+endif
+if (DellPersistenceLogSUP[10] == StizeComEvent)
+   CsvCheckPoint[7240] = 1
+   prnf "                Pass"
+else
+   CsvCheckPoint[7240] = 0
+   prnf "                Fail***"
+   ErrCnt+=1
+   if (StizeComEvent == 1 && DellPersistenceLogSUP[10] == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (StizeComEvent == 0 && DellPersistenceLogSUP[10] == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+if (StizeComEvent == 1)
+   nvm_getlog 0dh, 0, 0, 2
+   nvm_getlog 0dh, 0, 0, 1
+   nvm_getlog 0dh, 0, 552,0 //Completion
+   g0 = 0
+   do
+      RU "ReadA",g0,PersistentFMT[g0];
+      g0+=1
+   until (g0 == 6)
+   prnf "\n        Sanitize Progress (0-1)      = %Xh",PersistentFMT[0]
+   prnf "\n        Sanitize Status (2-3)        = %Xh",PersistentFMT[1]
+   prnf "\n        Completion Information (4-5) = %Xh",PersistentFMT[2]
+endif
+
+//if (SFEvent == 1)
+//   prnf "\n     Set Feature Event Support (Bit 11=1b)              :  Yes"
+//else
+//   prnf "\n     Set Feature Event Support (Bit 11=0b)              :  No"
+//endif
+//if (TelLogCreateEvent == 1)
+//   prnf "\n     Telemetry Log Create Event Support (Bit 12=1b)     :  Yes"
+//else
+//   prnf "\n     Telemetry Log Create Event Support (Bit 12=0b)     :  No"
+//endif
+if (TheExcurEvent == 1)
+   prnf "\n     Thermal Excursion Event Support (Bit 13=1b)   :  Yes"
+else
+   prnf "\n     Thermal Excursion Event Support (Bit 13=0b)   :   No"
+endif
+if (DellPersistenceLogSUP[13] == 1)
+   prnf "                   Yes"
+else
+   prnf "                    No"
+endif
+if (DellPersistenceLogSUP[13] == TheExcurEvent)
+   CsvCheckPoint[7243] = 1
+   prnf "                Pass"
+else
+   CsvCheckPoint[7243] = 0
+   prnf "                Fail***"
+   ErrCnt+=1
+   if (TheExcurEvent == 1 && DellPersistenceLogSUP[13] == 0)
+      prnf "\n      +++++ Fail: The device Value should be 'No'"
+      prnf "\n"
+      prnf "\n"
+   elseif (TheExcurEvent == 0 && DellPersistenceLogSUP[13] == 1)
+      prnf "\n      +++++ Fail: The device Value should be 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+//if (VSEvent == 1)
+//   prnf "\n     Vendor Specific Event Support (Bit 222=1b)         :  Yes"
+//else
+//   prnf "\n     Vendor Specific Event Support (Bit 222=0b)         :  No"
+//endif
+
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[71] >= 1 && CsvCheckPoint[72] >= 1 && CsvCheckPoint[73] >= 1 && CsvCheckPoint[74] >= 1 && CsvCheckPoint[75] >= 1 && CsvCheckPoint[76] >= 1 && CsvCheckPoint[77] >= 1 && CsvCheckPoint[78] >= 1 && CsvCheckPoint[79] >= 1 && CsvCheckPoint[710] >= 1 && CsvCheckPoint[711] >= 1 && CsvCheckPoint[712] >= 1 && CsvCheckPoint[713] >= 1 && CsvCheckPoint[714] >= 1 && CsvCheckPoint[715] >= 1 && CsvCheckPoint[716] >= 1 && CsvCheckPoint[717] >= 1 && CsvCheckPoint[718] >= 1 && CsvCheckPoint[719] >= 1 && CsvCheckPoint[720] >= 1 && CsvCheckPoint[721] >= 1 && CsvCheckPoint[722] >= 1 && CsvCheckPoint[723] >= 1 && CsvCheckPoint[7233] >= 1 && CsvCheckPoint[7237] >= 1 && CsvCheckPoint[7238] >= 1 && CsvCheckPoint[7239] >= 1 && CsvCheckPoint[7240] >= 1 && CsvCheckPoint[7243] >= 1)
+   prnf "\nDell NVMe Feature Requirements Table:, PASS"
+else
+   prnf "\nDell NVMe Feature Requirements Table:, FAIL"
+endif
+
+if (CsvCheckPoint[71] == 1)
+   prnf "\n Support Namespaces:, PASS"
+else
+   prnf "\n Support Namespaces:, FAIL"
+endif
+
+if (CsvCheckPoint[72] == 1)
+   prnf "\n I/O Submission Queues:, PASS"
+elseif (CsvCheckPoint[72] == 2)
+   prnf "\n I/O Submission Queues:, NA"
+else
+   prnf "\n I/O Submission Queues:, FAIL"
+endif
+
+if (CsvCheckPoint[73] == 1)
+   prnf "\n I/O Completion Queues:, PASS"
+elseif (CsvCheckPoint[73] == 2)
+   prnf "\n I/O Completion Queues:, NA"
+else
+   prnf "\n I/O Completion Queues:, FAIL"
+endif
+
+if (CsvCheckPoint[74] == 1)
+   prnf "\n Support Active State Power Management:, PASS"
+else
+   prnf "\n Support Active State Power Management:, FAIL"
+endif
+
+if (CsvCheckPoint[75] == 1)
+   prnf "\n Support Auto PS Transition:, PASS"
+else
+   prnf "\n Support Auto PS Transition:, FAIL"
+endif
+
+if (CsvCheckPoint[76] == 1)
+   prnf "\n Cryptographic Erase:, PASS"
+else
+   prnf "\n Cryptographic Erase:, FAIL"
+endif
+
+if (CsvCheckPoint[77] == 1)
+   prnf "\n Secure Erase:, PASS"
+else
+   prnf "\n Secure Erase:, FAIL"
+endif
+
+if (CsvCheckPoint[78] == 1)
+   prnf "\n Low Level Format:, PASS"
+else
+   prnf "\n Low Level Format:, FAIL"
+endif
+
+if (CsvCheckPoint[79] == 1)
+   prnf "\n Block Erase sanitize:, PASS"
+else
+   prnf "\n Block Erase sanitize:, FAIL"
+endif
+
+if (CsvCheckPoint[710] == 1)
+   prnf "\n Crypto Erase sanitize:, PASS"
+else
+   prnf "\n Crypto Erase sanitize:, FAIL"
+endif
+
+if (CsvCheckPoint[711] == 1)
+   prnf "\n Overwrite sanitize:, PASS"
+else
+   prnf "\n Overwrite sanitize:, FAIL"
+endif
+
+if (CsvCheckPoint[712] == 1)
+   prnf "\n Temperature Threshold:, PASS"
+else
+   prnf "\n Temperature Threshold:, FAIL"
+endif
+
+if (CsvCheckPoint[713] == 1)
+   prnf "\n Asynchronous Event Config:, PASS"
+else
+   prnf "\n Asynchronous Event Config:, FAIL"
+endif
+
+if (CsvCheckPoint[714] == 1)
+   prnf "\n Volatile Wr Cache:, PASS"
+else
+   prnf "\n Volatile Wr Cache:, FAIL"
+endif
+
+if (CsvCheckPoint[715] == 1)
+   prnf "\n E2E Data Protect:, PASS"
+else
+   prnf "\n E2E Data Protect:, FAIL"
+endif
+
+if (CsvCheckPoint[716] == 1)
+   prnf "\n Reservations:, PASS"
+else
+   prnf "\n Reservations:, FAIL"
+endif
+
+if (CsvCheckPoint[717] == 1)
+   prnf "\n Host Memory Buffer:, PASS"
+else
+   prnf "\n Host Memory Buffer:, FAIL"
+endif
+
+if (CsvCheckPoint[718] == 1)
+   prnf "\n Re-Protected Memory Blk:, PASS"
+else
+   prnf "\n Re-Protected Memory Blk:, FAIL"
+endif
+
+if (CsvCheckPoint[719] == 1)
+   prnf "\n Boot Partitions:, PASS"
+else
+   prnf "\n Boot Partitions:, FAIL"
+endif
+if (CsvCheckPoint[7191] == 1)
+   prnf "\n   Boot Partition Size:, PASS"
+elseif (CsvCheckPoint[7191] == 0)
+   prnf "\n   Boot Partition Size:, FAIL"
+else
+   prnf "\n   Boot Partition Size:, NA"
+endif
+
+if (CsvCheckPoint[7192] == 1)
+   prnf "\n   FW commit with Commit Action (110b):, PASS"
+elseif (CsvCheckPoint[7192] == 0)
+   prnf "\n   FW commit with Commit Action (110b):, FAIL"
+else
+   prnf "\n   FW commit with Commit Action (110b):, NA"
+endif
+
+if (CsvCheckPoint[7193] == 1)
+   prnf "\n   FW commit with Commit Action (111b):, PASS"
+elseif (CsvCheckPoint[7192] == 0)
+   prnf "\n   FW commit with Commit Action (111b):, FAIL"
+else
+   prnf "\n   FW commit with Commit Action (111b):, NA"
+endif
+
+if (CsvCheckPoint[720] == 1)
+   prnf "\n Namespace Management:, PASS"
+else
+   prnf "\n Namespace Management:, FAIL"
+endif
+
+if (CsvCheckPoint[721] == 1)
+   prnf "\n Host Controlled Thermal Mgt:, PASS"
+else
+   prnf "\n Host Controlled Thermal Mgt:, FAIL"
+endif
+
+if (CsvCheckPoint[722] == 1)
+   prnf "\n Non-Operational PS Config:, PASS"
+else
+   prnf "\n Non-Operational PS Config:, FAIL"
+endif
+
+if (CsvCheckPoint[723] == 1)
+   prnf "\n Persistent Event Log:, PASS"
+else
+   prnf "\n Persistent Event Log:, FAIL"
+endif
+if (CsvCheckPoint[7233] == 1)
+   prnf "\n   Timestamp Change Event Support:, PASS"
+else
+   prnf "\n   Timestamp Change Event Support:, FAIL"
+endif
+if (CsvCheckPoint[7237] == 1)
+   prnf "\n   Format NVM Start Event Support:, PASS"
+else
+   prnf "\n   Format NVM Start Event Support:, FAIL"
+endif
+if (CsvCheckPoint[7238] == 1)
+   prnf "\n   Format NVM Completion Even Support:, PASS"
+else
+   prnf "\n   Format NVM Completion Even Support:, FAIL"
+endif
+if (CsvCheckPoint[7239] == 1)
+   prnf "\n   Sanitize Start Event Support:, PASS"
+else
+   prnf "\n   Sanitize Start Event Support:, FAIL"
+endif
+if (CsvCheckPoint[7240] == 1)
+   prnf "\n   Sanitize Completion Event Support:, PASS"
+else
+   prnf "\n   Sanitize Completion Event Support:, FAIL"
+endif
+if (CsvCheckPoint[7243] == 1)
+   prnf "\n   Thermal Excursion Event Support:, PASS"
+else
+   prnf "\n   Thermal Excursion Event Support:, FAIL"
+endif
+endexport
+
+prns "\n"
+prns "\n"
+prns "\n Test Case 8: Dell Feature Persistence Table"
+prns "\n Features                  Dell O/M   Support     Savable        Default       Dell Savable      Dell Default    Result   "
+prns "\n ========================================================================================================================="
+prnf "\n  Arbitration(01h)             M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_ARBTR
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[0] = 0
+else
+   prnf "      Yes"
+   SptChk[0] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (idata[1] == 2)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_ARBTR
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[0] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (DellPersistence[0] == idata[1] && DellFeaM == SptChk[0])
+   CsvCheckPoint[81] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[81] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[0])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[0] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Power Management(02h)        M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_PWRMGT
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[1] = 0
+else
+   prnf "      Yes"
+   SptChk[1] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[1] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_PWRMGT
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[1] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+k1 = 0
+prnf "                0x%04X",k1
+if (DellPersistence[1] == idata[1] && idata[0] == k1 && DellFeaM == SptChk[1])
+   CsvCheckPoint[82] = 1
+   prnf "     Pass"
+else
+   CsvCheckPoint[82] = 1
+   prnf "     Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[1])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[1] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Number of LBA Ranges(03h)    O  "
+NVM_GETF_SEL = 3
+NVM_GETF_LBATYPE
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[2] = 0
+else
+   prnf "      Yes"
+   SptChk[2] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[2] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 03h;
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[2] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (SptChk[2] == 0)
+   CsvCheckPoint[83] = 2
+   prnf "         NA"
+elseif (DellPersistence[2] == idata[1])
+   CsvCheckPoint[83] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[83] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (idata[1] == 0 && DellPersistence[2] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+prnf "\n  Over Temp Threshold(04h)     M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_TMPTHLD
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[3] = 0
+else
+   prnf "      Yes"
+   SptChk[3] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[3] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_TMPTHLD
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0];prnf " (%dC)",idata[0]-273
+if (DellPersistence[3] == 0)
+   prnf "      No"
+else
+   prnf "      Yes"
+endif
+prnf "                VS"
+if (DellPersistence[3] == idata[1] && DellFeaM == SptChk[3])
+   CsvCheckPoint[84] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[84] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[3])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[3] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+nvm_cmd_nsid = 1
+prnf "\n  Error Recovery(05h)          M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_ERRRCVY
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[4] = 0
+else
+   prnf "      Yes"
+   SptChk[4] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[4] == 0)
+      prnf "         NA"
+      idata[1] = 2
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_ERRRCVY
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[4] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (DellPersistence[4] == idata[1] && DellFeaM == SptChk[4])
+   CsvCheckPoint[85] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[85] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[4])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[4] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+nvm_cmd_nsid = 0
+
+prnf "\n  Volatile Write Cache(06h)    M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_WRCACHE
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[5] = 0
+else
+   prnf "      Yes"
+   SptChk[5] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[5] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_WRCACHE
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[5] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (DellPersistence[5] == idata[1] && DellFeaM == SptChk[5])
+   CsvCheckPoint[86] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[86] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[5])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[5] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Number of Queues(07h)        M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_NUMQ
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[6] = 0
+else
+   prnf "      Yes"
+   SptChk[6] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[6] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_NUMQ
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[6] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                Max"
+if (DellPersistence[6] == idata[1] && DellFeaM == SptChk[6])
+   CsvCheckPoint[87] = 1
+   prnf "        Pass"
+else
+   CsvCheckPoint[87] = 0
+   prnf "        Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[6])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[6] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Interrupt Coalescing(08h)    M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF 08h;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[7] = 0
+else
+   prnf "      Yes"
+   SptChk[7] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[7] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 08h;
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[7] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (DellPersistence[7] == idata[1] && DellFeaM == SptChk[7])
+   CsvCheckPoint[88] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[88] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[7])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[7] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Interrupt Vector Config(09h) M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF 09h;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[8] = 0
+else
+   prnf "      Yes"
+   SptChk[8] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[8] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 09h;
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[8] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (DellPersistence[8] == idata[1] && DellFeaM == SptChk[8])
+   CsvCheckPoint[89] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[89] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[8])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[8] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  HCTM (10h)                   M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF 10h;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[15] = 0
+else
+   prnf "      Yes"
+   SptChk[15] = 1
+endif
+
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[15] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 10h;
+idata[0] = NVM_CQE_DW0
+HCTM1Val = (idata[0]>>16)
+HCTM2Val = (idata[0]&0ffffh)
+if (idata[0] == 0)
+   prnf "           Disable"
+   if (DellPersistence[15] == 0)
+      prnf "            No"
+   else
+      prnf "           Yes"
+   endif
+else
+   prnf "          %8.8x",idata[0]
+   prnf " (%dC",HCTM1Val-273
+   prnf "/%dC)",HCTM2Val-273
+   if (DellPersistence[15] == 0)
+      prnf "   No"
+   else
+      prnf "  Yes"
+   endif
+endif
+prnf "               Enable"
+
+if (DellPersistence[15] == idata[1] && DellFeaM == SptChk[15])
+   CsvCheckPoint[816] = 1
+   prnf "     Pass"
+else
+   CsvCheckPoint[816] = 0
+   prnf "     Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[15])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[15] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+nvm_cmd_nsid = 1
+prnf "\n  Write Atomicity Normal(0Ah)  M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_WRATOM
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[9] = 0
+else
+   prnf "      Yes"
+   SptChk[9] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[9] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_WRATOM
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[9] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+prnf "                VS"
+if (DellPersistence[9] == idata[1] && DellFeaM == SptChk[9])
+   CsvCheckPoint[810] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[810] = 0
+   prnf "         Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[9])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[9] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+nvm_cmd_nsid = 0
+
+prnf "\n  Async Event Config(0Bh)      M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF_ASYNCFG
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[10] = 0
+else
+   prnf "      Yes"
+   SptChk[10] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[10] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF_ASYNCFG
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[10] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+k1 = 15
+prnf "                0x%04X",k1
+//if (DellPersistence[10] == idata[1] && idata[0] == k1 && DellFeaM == SptChk[10])
+if (DellPersistence[10] == idata[1] && DellFeaM == SptChk[10])
+   CsvCheckPoint[811] = 1
+   prnf "     Pass"
+else
+   CsvCheckPoint[811] = 0
+   prnf "     Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[10])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[10] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Autonomous Power State(0Ch)  M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF 0Ch;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[11] = 0
+else
+   prnf "      Yes"
+   SptChk[11] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[11] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 0Ch;
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[11] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+k1 = 0
+prnf "                0x%04X",k1
+if (DellPersistence[11] == idata[1] && idata[0] == k1 && DellFeaM == SptChk[11])
+   CsvCheckPoint[812] = 1
+   prnf "     Pass"
+else
+   CsvCheckPoint[812] = 0
+   prnf "     Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[11])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   endif
+   if (idata[1] == 0 && DellPersistence[11] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  Host Memory Buffer(0Dh)      O  "
+NVM_GETF_SEL = 3
+NVM_GETF 0Dh;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[12] = 0
+else
+   prnf "      Yes"
+   SptChk[12] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[12] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 0Dh;
+idata[0] = NVM_CQE_DW0
+prnf "          %8.8x",idata[0]
+if (DellPersistence[12] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+k1 = 0
+prnf "                0x%04X",k1
+if (SptChk[12] == 0)
+   CsvCheckPoint[813] = 2
+   prnf "     NA (Feature not supported)"
+elseif (DellPersistence[12] == idata[1])
+   CsvCheckPoint[813] = 1
+   prnf "     Pass"
+else
+   CsvCheckPoint[813] = 0
+   prnf "     Fail***"
+   ErrCnt+=1
+   if (idata[1] == 0 && DellPersistence[12] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+prnf "\n  HD-DITM(D4h)                 O  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF 0D4h;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[13] = 0
+else
+   prnf "      Yes"
+   SptChk[13] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[13] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 0D4h;
+idata[0] = NVM_CQE_DW0
+MT1Val = (idata[0]>>16)
+MT2Val = (idata[0]&0ffffh)
+if (MT1Val == 0)
+   prnf "                NA"
+   if (DellPersistence[13] == 0)
+      prnf "            No"
+   else
+      prnf "           Yes"
+   endif
+else
+   prnf "          %8.8X", idata[0]
+   prnf " (%dC",MT1Val-273
+   prnf "/%dC)",MT2Val-273
+   if (DellPersistence[13] == 0)
+      prnf "  No"
+   else
+      prnf " Yes"
+   endif
+endif
+
+prnf "                VS"
+if (DellPersistence[13] == idata[1] && DellFeaM == SptChk[13])
+   CsvCheckPoint[814] = 1
+   prnf "         Pass"
+else
+   CsvCheckPoint[814] = 2
+   prnf "         NA"
+endif
+
+prnf "\n  SCP(D8h)                     M  "
+DellFeaM = 1
+NVM_GETF_SEL = 3
+NVM_GETF 0D8h;
+idata[0] = NVM_CQE_DW0
+if (code)
+   prnf "       No"
+   SptChk[14] = 0
+else
+   prnf "      Yes"
+   SptChk[14] = 1
+endif
+if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+   if (SptChk[14] == 0)
+      prnf "         NA"
+   else
+      prnf "         No"
+      idata[1] = 0
+   endif
+else
+   prnf "        Yes"
+   idata[1] = 1
+endif
+NVM_GETF_SEL = 1
+NVM_GETF 0D8h;
+idata[0] = NVM_CQE_DW0
+if (idata[0] == 0)
+   prnf "           Disable"
+   i0 = 0
+else
+   prnf "            Enable"
+   i0 = 1
+endif
+if (DellPersistence[14] == 0)
+   prnf "            No"
+else
+   prnf "           Yes"
+endif
+k1 = 0
+if (k1 == 0)
+   prnf "                Disable"
+else
+   prnf "                 Enable"
+endif
+if (DellPersistence[14] == idata[1] && i0 == k1 && DellFeaM == SptChk[14])
+   CsvCheckPoint[815] = 1
+   prnf "    Pass"
+else
+   CsvCheckPoint[815] = 0
+   prnf "    Fail***"
+   ErrCnt+=1
+   if (DellFeaM != SptChk[14])
+      prnf "\n      +++++ Fail: The Feature is Mandatory, Device does not support the Feature"
+      prnf "\n"
+      prnf "\n"
+   elseif (idata[1] == 0 && DellPersistence[14] == 1)
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'Yes'"
+      prnf "\n"
+      prnf "\n"
+   else
+      prnf "\n      +++++ Fail: The Device Persistence should be = 'No'"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[81] >= 1 && CsvCheckPoint[82] >= 1 && CsvCheckPoint[83] >= 1 && CsvCheckPoint[84] >= 1 && CsvCheckPoint[85] >= 1 && CsvCheckPoint[86] >= 1 && CsvCheckPoint[87] >= 1 && CsvCheckPoint[88] >= 1 && CsvCheckPoint[89] >= 1 && CsvCheckPoint[810] >= 1 && CsvCheckPoint[811] >= 1 && CsvCheckPoint[812] >= 1 && CsvCheckPoint[813] >= 1 && CsvCheckPoint[814] >= 1 && CsvCheckPoint[815] >= 1)
+   prnf "\nDell Feature Persistence Table:, PASS"
+else
+   prnf "\nDell Feature Persistence Table:, FAIL"
+endif
+
+if (CsvCheckPoint[81] == 1)
+   prnf "\n Arbitration:, PASS"
+else
+   prnf "\n Arbitration:, FAIL"
+endif
+if (CsvCheckPoint[82] == 1)
+   prnf "\n Power Management:, PASS"
+else
+   prnf "\n Power Management:, FAIL"
+endif
+if (CsvCheckPoint[83] == 1)
+   prnf "\n Number of LBA Ranges:, PASS"
+elseif (CsvCheckPoint[83] == 2)
+   prnf "\n Number of LBA Ranges:, NA"
+else
+   prnf "\n Number of LBA Ranges:, FAIL"
+endif
+if (CsvCheckPoint[84] == 1)
+   prnf "\n Over Temp Threshold:, PASS"
+else
+   prnf "\n Over Temp Threshold:, FAIL"
+endif
+if (CsvCheckPoint[85] == 1)
+   prnf "\n Error Recovery:, PASS"
+else
+   prnf "\n Error Recovery:, FAIL"
+endif
+if (CsvCheckPoint[86] == 1)
+   prnf "\n Volatile Write Cache:, PASS"
+else
+   prnf "\n Volatile Write Cache:, FAIL"
+endif
+if (CsvCheckPoint[87] == 1)
+   prnf "\n Number of Queues:, PASS"
+else
+   prnf "\n Number of Queues:, FAIL"
+endif
+if (CsvCheckPoint[88] == 1)
+   prnf "\n Interrupt Coalescing:, PASS"
+else
+   prnf "\n Interrupt Coalescing:, FAIL"
+endif
+if (CsvCheckPoint[89] == 1)
+   prnf "\n Interrupt Vector Config:, PASS"
+else
+   prnf "\n Interrupt Vector Config:, FAIL"
+endif
+if (CsvCheckPoint[810] == 1)
+   prnf "\n Write Atomicity Normal:, PASS"
+else
+   prnf "\n Write Atomicity Normal:, FAIL"
+endif
+if (CsvCheckPoint[811] == 1)
+   prnf "\n Async Event Config:, PASS"
+else
+   prnf "\n Async Event Config:, FAIL"
+endif
+if (CsvCheckPoint[812] == 1)
+   prnf "\n Autonomous Power State:, PASS"
+else
+   prnf "\n Autonomous Power State:, FAIL"
+endif
+if (CsvCheckPoint[813] == 1)
+   prnf "\n Host Memory Buffer:, PASS"
+elseif (CsvCheckPoint[813] == 2)
+   prnf "\n Host Memory Buffer:, NA"
+else
+   prnf "\n Host Memory Buffer:, FAIL"
+endif
+if (CsvCheckPoint[814] == 1)
+   prnf "\n HD-DITM:, PASS"
+elseif (CsvCheckPoint[814] == 2)
+   prnf "\n HD-DITM:, NA"
+else
+   prnf "\n HD-DITM:, FAIL"
+endif
+
+if (CsvCheckPoint[815] == 1)
+   prnf "\n SCP:, PASS"
+else
+   prnf "\n SCP:, FAIL"
+endif
+if (CsvCheckPoint[816] == 1)
+   prnf "\n HCTM:, PASS"
+else
+   prnf "\n HCTM:, FAIL"
+endif
+endexport
+
+prns "\n"
+prns "\n"
+prns "\n Test Case 9: NVMe Controller Registers Settings"
+prnf "\n                                                     Value        Dell Spec     Result   "
+prnf "\n ========================================================================================"
+InNvmHba 4,g0;  
+MPSIMIN = ((g0>>16)&0fh)
+j0 = 1
+j1 = 2
+do
+   j1 = j1 * 2
+   j0+=1
+until (j0 == MPSIMIN +13)
+prnf "\n  Memory Page Size Min                             : 0x%01X",MPSIMIN
+prnf "          0x%01X", DellMPSMIN
+if (DellMPSMIN == MPSIMIN)
+   CsvCheckPoint[91] = 1
+   prnf "           Pass"
+else
+   CsvCheckPoint[91] = 0
+   prnf "           Fail***"
+   ErrCnt+=1
+   prnf "\n      +++++ Fail: The Device Value not follow Dell spec Value"
+   prnf "\n"
+   prnf "\n"
+endif
+
+INNVMHBA 8,HBAVer
+NVM_Idfy_Ctrlr
+RU "ReadA",77,i;
+
+if (i == 0)
+   prnf "\n  Maximum Data Transfer Size                       : %2.2Xh        ",i
+else
+   j0 = 1
+   j1 = j1/1024
+   do
+      j1 = j1 * 2
+      j0+=1
+   until (j0 == i)
+   prnf "\n  Maximum Data Transfer Size                       : %2.2Xh",i;prnf "(%dKB)",j1
+endif
+if (j1 > 1000)
+   prnf "  06h(256KB)"
+else
+   prnf "   06h(256KB)"
+endif
+if (i == 0 || i >= 6)
+   CsvCheckPoint[92] = 1
+   prnf "    Pass"
+else
+   CsvCheckPoint[92] = 0
+   prnf "    Fail***"
+   ErrCnt+=1
+   prnf "\n      +++++ Fail: The Device Value less than Dell spec Value"
+   prnf "\n"
+   prnf "\n"
+endif
+
+nvm_cmd_nsid = 1
+nvm_idfy 00h
+INNVMHBA 8,HBAVer
+i = 0
+do
+   RU "ReadA",i,Datavalue[i];
+   i+=1
+until (i == 1409)
+i0 = 0
+i1 = 128
+do
+   LBADS[i0] = Datavalue[i1+2]
+   i0+=1
+   i1+=4
+until (i0 == 16)
+i0 = Datavalue[26] & 0fh
+if (LBADS[i0] > 1) 
+   k0=0
+   k1=2
+   do
+      k1=k1*2
+      k0+=1
+   until (k0==LBADS[i0]-1)
+elseif (LBADS[i0] == 1)
+   k1=2
+elseif (LBADS[i0] == 0)
+   k1=0
+endif
+prnf "\n  Formatted LBA Size                               : 0x%01X", i0; prnf "(%dB)", k1
+if (LBADS[DellFLBAS] > 1) 
+   k0=0
+   k1=2
+   do
+      k1=k1*2
+      k0+=1
+   until (k0==LBADS[DellFLBAS]-1)
+elseif (LBADS[DellFLBAS] == 1)
+   k1=2
+elseif (LBADS[DellFLBAS] == 0)
+   k1=0
+endif
+prnf "    0x%01X", DellFLBAS; prnf "(%dB)", k1
+if (i0 == DellFLBAS)
+   CsvCheckPoint[93] = 1
+   prnf "     Pass"
+else
+   CsvCheckPoint[93] = 0
+   prnf "     Fail***"
+   ErrCnt+=1
+   prnf "\n      +++++ Fail: The Device Value less than Dell spec Value"
+   prnf "\n"
+   prnf "\n"
+endif
+
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[91] >= 1 && CsvCheckPoint[92] >= 1 && CsvCheckPoint[93] >= 1)
+   prnf "\nNVMe Controller Registers Settings:, PASS"
+else
+   prnf "\nNVMe Controller Registers Settings:, FAIL"
+endif
+
+if (CsvCheckPoint[91] == 1)
+   prnf "\n Memory Page Size Min:, PASS"
+else
+   prnf "\n Memory Page Size Min:, FAIL"
+endif
+
+if (CsvCheckPoint[92] == 1)
+   prnf "\n Maximum Data Transfer Size:, PASS"
+else
+   prnf "\n Maximum Data Transfer Size:, FAIL"
+endif
+
+if (CsvCheckPoint[93] == 1)
+   prnf "\n Formatted LBA Size:, PASS"
+else
+   prnf "\n Formatted LBA Size:, FAIL"
+endif
+endexport
+
+prns "\n"
+prns "\n"
+prns "\n Test Case 10: Test Dell Persistence Command Status (Set Feature with Default Value and Save=1)"
+prns "\n Name                           Persistence   Dell Persistence   Command Status (Save=1)    Result   "
+prnf "\n ===================================================================================================="
+prnf "\n  Arbitration(01h)              "
+nvm_cmd_nsid = 0
+NVM_GETF_SEL = 3
+NVM_GETF_ARBTR
+idata[0] = NVM_CQE_DW0
+NVM_GETF_PWRMGT
+idata[1] = NVM_CQE_DW0
+NVM_GETF_LBATYPE
+idata[2] = NVM_CQE_DW0
+NVM_GETF_TMPTHLD
+idata[3] = NVM_CQE_DW0
+NVM_GETF_ERRRCVY
+idata[4] = NVM_CQE_DW0
+NVM_GETF_WRCACHE
+idata[5] = NVM_CQE_DW0
+NVM_GETF_NUMQ
+idata[6] = NVM_CQE_DW0
+NVM_GETF_IRQCLSC
+idata[7] = NVM_CQE_DW0
+NVM_GETF_IRQVCFG 1
+idata[8] = NVM_CQE_DW0
+NVM_GETF_WRATOM
+idata[9] = NVM_CQE_DW0
+NVM_GETF_ASYNCFG
+idata[10] = NVM_CQE_DW0
+NVM_GETF_AUTOPWRT
+idata[11] = NVM_CQE_DW0
+NVM_GETF_HOSTBUF
+idata[12] = NVM_CQE_DW0
+NVM_GETF 0D4h
+idata[13] = NVM_CQE_DW0
+NVM_GETF 0D8h;
+idata[14] = NVM_CQE_DW0
+if (SptChk[0] == 0)
+   prnf "    NA"
+else
+   if (idata[0] == 0 || idata[0] == 2 || idata[0] == 4 || idata[0] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[0] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_ARBTR
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_ARBTR 3,2,1,3
+i = 0
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[101] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[101] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[101] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[101] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[101] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Power Management(02h)         "
+if (SptChk[1] == 0)
+   prnf "    NA"
+else
+   if (idata[1] == 0 || idata[1] == 2 || idata[1] == 4 || idata[1] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[1] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_PWRMGT
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_PWRMGT 1
+i = 1
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[102] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[102] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[102] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[102] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[102] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Number of LBA Ranges(03h)     "
+if (SptChk[2] == 0)
+   prnf "    NA"
+else
+   if (idata[2] == 0 || idata[2] == 2 || idata[2] == 4 || idata[2] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[2] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+if (idata[2] == 0 || idata[2] == 1 || idata[2] == 4 || idata[2] == 5 || idata[2] == 8 || idata[2] == 9 || idata[2] == 12 || idata[2] == 13)
+   nvm_cmd_nsid = 0
+else
+   nvm_cmd_nsid = 1
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_LBATYPE;
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_GETF_LBATYPE;
+i = 2
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[103] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[103] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[103] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[103] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[103] = 1
+      endif
+   endif
+endif
+nvm_cmd_nsid = 0
+
+prnf "\n  Over Temp Threshold(04h)      "
+if (SptChk[3] == 0)
+   prnf "    NA"
+else
+   if (idata[3] == 0 || idata[3] == 2 || idata[3] == 4 || idata[3] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[3] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_TMPTHLD
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_TMPTHLD 0
+i = 3
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[104] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[104] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[104] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[104] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[104] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Error Recovery(05h)           "
+if (SptChk[4] == 0)
+   prnf "    NA"
+else
+   if (idata[4] == 0 || idata[4] == 2 || idata[4] == 4 || idata[4] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[4] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_ERRRCVY
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_ERRRCVY 50h
+i = 4
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[105] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[105] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[105] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[105] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[105] = 1
+      endif
+   endif
+endif
+
+
+prnf "\n  Volatile Write Cache(06h)     "
+if (SptChk[5] == 0)
+   prnf "    NA"
+else
+   if (idata[5] == 0 || idata[5] == 2 || idata[5] == 4 || idata[5] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[5] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_WRCACHE
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_WRCACHE 1
+i = 5
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[106] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[106] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[106] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[106] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[106] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Number of Queues(07h)         "
+if (SptChk[6] == 0)
+   prnf "    NA"
+else
+   if (idata[6] == 0 || idata[6] == 2 || idata[6] == 4 || idata[6] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[6] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_NUMQ
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF 07h, 1
+i = 6
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[107] = 1
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[107] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[107] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[107] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[107] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Interrupt Coalescing(08h)     "
+if (SptChk[7] == 0)
+   prnf "    NA"
+else
+   if (idata[7] == 0 || idata[7] == 2 || idata[7] == 4 || idata[7] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[7] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_IRQCLSC
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_IRQCLSC 0,0
+i = 7
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[108] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[108] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[108] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[108] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[108] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Interrupt Vector Config(09h)  "
+if (SptChk[8] == 0)
+   prnf "    NA"
+else
+   if (idata[8] == 0 || idata[8] == 2 || idata[8] == 4 || idata[8] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[8] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_IRQVCFG 1
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_IRQVCFG 1,1
+i = 8
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[109] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[109] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[109] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[109] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[109] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Write Atomicity Normal(0Ah)   "
+if (SptChk[9] == 0)
+   prnf "    NA"
+else
+   if (idata[9] == 0 || idata[9] == 2 || idata[9] == 4 || idata[9] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[9] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_WRATOM
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_WRATOM 0
+i = 9
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[1010] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[1010] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[1010] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[1010] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[1010] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Async Event Config(0Bh)       "
+if (SptChk[10] == 0)
+   prnf "    NA"
+else
+   if (idata[10] == 0 || idata[10] == 2 || idata[10] == 4 || idata[10] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[10] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_ASYNCFG
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_ASYNCFG 1
+i = 10
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[1011] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[1011] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[1011] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[1011] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[1011] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Autonomous Power State(0Ch)   "
+if (SptChk[11] == 0)
+   prnf "    NA"
+else
+   if (idata[11] == 0 || idata[11] == 2 || idata[11] == 4 || idata[11] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[11] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_AUTOPWRT
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_AUTOPWRT 1
+i = 11
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[1012] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[1012] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[1012] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[1012] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[1012] = 1
+      endif
+   endif
+endif
+
+prnf "\n  Host Memory Buffer(0Dh)       "
+if (SptChk[12] == 0)
+   prnf "    NA"
+else
+   if (idata[12] == 0 || idata[12] == 2 || idata[12] == 4 || idata[12] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[12] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF_HOSTBUF
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF_HOSTBUF 1,1,0FFh
+i = 12
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[1013] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[1013] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[1013] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[1013] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[1013] = 1
+      endif
+   endif
+endif
+
+prnf "\n  HD-DITM(D4h)                  "
+if (SptChk[13] == 0)
+   prnf "    NA"
+else
+   if (idata[13] == 0 || idata[13] == 2 || idata[13] == 4 || idata[13] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[13] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF 0D4h
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_SETF 0D4h, 158015Bh
+i = 13
+
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[1014] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[1014] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[1014] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[1014] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[1014] = 1
+      endif
+   endif
+endif
+
+
+
+prnf "\n  SCP(D8h)                      "
+if (SptChk[14] == 0)
+   prnf "    NA"
+else
+   if (idata[14] == 0 || idata[14] == 2 || idata[14] == 4 || idata[14] == 6)
+      prnf "    No"
+      ChkPers = 0
+   else
+      prnf "   Yes"
+      ChkPers = 1
+   endif
+endif
+if (DellPersistence[14] == 0)
+   prnf "               No"
+else
+   prnf "              Yes"
+endif
+NVM_GETF_SEL = 2
+NVM_GETF 0D8h;
+copy "reada","writea",0,0,512
+NVM_SETF_SAVE = 1
+NVM_GETF 0D8h;
+i = 14
+if (SptChk[i] == 0)
+   prnf "                  NA"
+   prnf "                 NA (Feature Not Supported)"
+   CsvCheckPoint[1015] = 2
+else
+   if (DellPersistence[i] == 0)
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Pass"
+         CsvCheckPoint[1015] = 1
+      else
+         prnf "                  Success "
+         prnf "           Fail***"
+         CsvCheckPoint[1015] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'No', Command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   else
+      if (NVM_STATUS_CODE)
+         prnf "                  Abort"
+         prnf " (Status=%2.2Xh)",NVM_STATUS_CODE
+         prnf " Fail***"
+         CsvCheckPoint[1015] = 0
+         ErrCnt+=1
+         prnf "\n      +++++ Fail: The Dell Persistence = 'Yes', Command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "                  Success "
+         prnf "           Pass"
+         CsvCheckPoint[1015] = 1
+      endif
+   endif
+endif
+
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[101] >= 1 && CsvCheckPoint[102] >= 1 && CsvCheckPoint[103] >= 1 && CsvCheckPoint[104] >= 1 && CsvCheckPoint[105] >= 1 && CsvCheckPoint[106] >= 1 && CsvCheckPoint[107] >= 1 && CsvCheckPoint[108] >= 1 && CsvCheckPoint[109] >= 1 && CsvCheckPoint[1010] >= 1 && CsvCheckPoint[1011] >= 1 && CsvCheckPoint[1012] >= 1 && CsvCheckPoint[1013] >= 1 && CsvCheckPoint[1014] >= 1 && CsvCheckPoint[1015] >= 1)
+   prnf "\nTest Dell Persistence Command Status:, PASS"
+else
+   prnf "\nTest Dell Persistence Command Status:, FAIL"
+endif
+
+if (CsvCheckPoint[101] == 1)
+   prnf "\n Arbitration:, PASS"
+elseif (CsvCheckPoint[101] == 2)
+   prnf "\n Arbitration:, NA"
+else
+   prnf "\n Arbitration:, FAIL"
+endif
+if (CsvCheckPoint[102] == 1)
+   prnf "\n Power Management:, PASS"
+elseif (CsvCheckPoint[102] == 2)
+   prnf "\n Power Management:, NA"
+else
+   prnf "\n Power Management:, FAIL"
+endif
+if (CsvCheckPoint[103] == 1)
+   prnf "\n Number of LBA Ranges:, PASS"
+elseif (CsvCheckPoint[103] == 2)
+   prnf "\n Number of LBA Ranges:, NA"
+else
+   prnf "\n Number of LBA Ranges:, FAIL"
+endif
+if (CsvCheckPoint[104] == 1)
+   prnf "\n Over Temp Threshold:, PASS"
+elseif (CsvCheckPoint[104] == 2)
+   prnf "\n Over Temp Threshold:, NA"
+else
+   prnf "\n Over Temp Threshold:, FAIL"
+endif
+if (CsvCheckPoint[105] == 1)
+   prnf "\n Error Recovery:, PASS"
+elseif (CsvCheckPoint[105] == 2)
+   prnf "\n Error Recovery:, NA"
+else
+   prnf "\n Error Recovery:, FAIL"
+endif
+if (CsvCheckPoint[106] == 1)
+   prnf "\n Volatile Write Cache:, PASS"
+elseif (CsvCheckPoint[106] == 2)
+   prnf "\n Volatile Write Cache:, NA"
+else
+   prnf "\n Volatile Write Cache:, FAIL"
+endif
+if (CsvCheckPoint[107] == 1)
+   prnf "\n Number of Queues:, PASS"
+elseif (CsvCheckPoint[107] == 2)
+   prnf "\n Number of Queues:, NA"
+else
+   prnf "\n Number of Queues:, FAIL"
+endif
+if (CsvCheckPoint[108] == 1)
+   prnf "\n Interrupt Coalescing:, PASS"
+elseif (CsvCheckPoint[108] == 2)
+   prnf "\n Interrupt Coalescing:, NA"
+else
+   prnf "\n Interrupt Coalescing:, FAIL"
+endif
+if (CsvCheckPoint[109] == 1)
+   prnf "\n Interrupt Vector Config:, PASS"
+elseif (CsvCheckPoint[109] == 2)
+   prnf "\n Interrupt Vector Config:, NA"
+else
+   prnf "\n Interrupt Vector Config:, FAIL"
+endif
+if (CsvCheckPoint[1010] == 1)
+   prnf "\n Write Atomicity Normal:, PASS"
+elseif (CsvCheckPoint[1010] == 2)
+   prnf "\n Write Atomicity Normal:, NA"
+else
+   prnf "\n Write Atomicity Normal:, FAIL"
+endif
+if (CsvCheckPoint[1011] == 1)
+   prnf "\n Async Event Config:, PASS"
+elseif (CsvCheckPoint[1011] == 2)
+   prnf "\n Async Event Config:, NA"
+else
+   prnf "\n Async Event Config:, FAIL"
+endif
+if (CsvCheckPoint[1012] == 1)
+   prnf "\n Autonomous Power State:, PASS"
+elseif (CsvCheckPoint[1012] == 2)
+   prnf "\n Autonomous Power State:, NA"
+else
+   prnf "\n Autonomous Power State:, FAIL"
+endif
+if (CsvCheckPoint[1013] == 1)
+   prnf "\n Host Memory Buffer:, PASS"
+elseif (CsvCheckPoint[1013] == 2)
+   prnf "\n Host Memory Buffer:, NA"
+else
+   prnf "\n Host Memory Buffer:, FAIL"
+endif
+if (CsvCheckPoint[1014] == 1)
+   prnf "\n HD-DITM:, PASS"
+elseif (CsvCheckPoint[1014] == 2)
+   prnf "\n HD-DITM:, NA"
+else
+   prnf "\n HD-DITM:, FAIL"
+endif
+if (CsvCheckPoint[1015] == 1)
+   prnf "\n SCP:, PASS"
+elseif (CsvCheckPoint[1015] == 2)
+   prnf "\n SCP:, NA"
+else
+   prnf "\n SCP:, FAIL"
+endif
+endexport
+
+pwof; wait 5000; pwon; wait 5000;
+enableHBA
+if(code == 0) disableHBA; endif
+nvm_idfy
+prns "\n"
+prns "\n"
+prns "\n Test Case 11: Dell HD-DITM Temperature Settings (+-2C)"
+prns "\n"
+if (SptChk[13] == 0)
+   prns "\n"
+   prnf "\n      +++++ Fail: The Device not support HD-DITM, Skip"
+   goto exitMTTest;
+else
+   prns "\n"
+   prns "\n MT1 & MT2 Compare:"
+   prns "\n Name           Temperature    Dell Spec    Result   "
+   prnf "\n ===================================================="
+   prnf "\n  MT1(0:15) "
+   if (HCTM1Val < 273)
+      i0 = 0
+   else
+      i0 = HCTM1Val-273
+   endif
+   prnf "        %dC",i0
+   prnf "           %dC",DellMT1
+   if (i0 == DellMT1)
+      CsvCheckPoint[1101] = 1
+      prnf "       Pass"
+   else
+      CsvCheckPoint[1101] = 0
+      prnf "       Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device MT1 not meets the Dell Spec Value"
+   endif
+   prnf "\n  MT2(16:31)"
+   if (HCTM2Val < 273)
+      i0 = 0
+   else
+      i0 = HCTM2Val-273
+   endif
+   prnf "        %dC",i0
+   prnf "           %dC",DellMT2
+   if (i0 == DellMT2)
+      CsvCheckPoint[1102] = 1
+      prnf "       Pass"
+   else
+      CsvCheckPoint[1102] = 0
+      prnf "       Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: The device MT2 not meets the Dell Spec Value"
+   endif
+endif
+prns "\n"
+prns "\n"
+prns "\n"
+prns "\n MT1 & MT2 Temp Setting:"
+prns "\n Name           Temperature    >Temp    Command Status   <Temp    Command Status    Result   "
+prnf "\n ============================================================================================"
+
+if (SptChk[13] == 0)
+   CsvCheckPoint[1101] = 2
+   CsvCheckPoint[1102] = 2
+   CsvCheckPoint[111] = 2
+   CsvCheckPoint[112] = 2
+   CsvCheckPoint[113] = 2
+   prns "\n"
+   prnf "\n      +++++ Fail: The Device not support HD-DITM, Skip"
+else
+   prnf "\n  MT1(0:15) "
+   prnf "        %dC",MT1Val-273
+   TempVal[0] = MT1Val+2
+   prnf "         %dC",TempVal[0]-273
+   TempTest = (TempVal[0]<<16) + MT2Val
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h
+   NVM_SETF_SAVE = 1
+   NVM_SETF 0D4h,TempTest
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MTChk = (idata[0]>>16)
+   if (MTChk == 0 || MTChk == MT1Val)
+      prnf "           Abort"
+      MTResult[0] = 1
+   elseif (MTChk > MT1Val)
+      prnf "        Success "
+
+      MTResult[0] = 0
+   endif
+   TempVal[1] = MT1Val-2
+   prnf "       %dC",TempVal[1]-273
+   TempTest = (TempVal[1]<<16) + MT2Val
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h
+   NVM_SETF_SAVE = 1
+   NVM_SETF 0D4h,TempTest
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MTChk = (idata[0]>>16)
+   if (MTChk == 0 || MTChk == MT1Val)
+      prnf "           Abort"
+      MTResult[1] = 0
+   elseif (MTChk < MT1Val)
+      prnf "        Success "
+      MTResult[1] = 1
+   endif
+   if (MTResult[0] == 1 && MTResult[1] == 1)
+      CsvCheckPoint[111] = 1
+      prnf "       Pass"
+   else
+      CsvCheckPoint[111] = 0
+      prnf "       Fail***"
+      ErrCnt+=1
+      if (MTResult[0] == 0 && MTResult[1] == 1)
+         prnf "\n      +++++ Fail: Set Temp value greater than device temp value command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "\n      +++++ Fail: Set Temp value less than device temp value command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   endif
+   prnf "\n  MT2(16:31)"
+   prnf "        %dC",MT2Val-273
+   TempVal[2] = MT2Val+2
+   prnf "         %dC",TempVal[2]-273
+   TempTest = (TempVal[0]<<16) + TempVal[2]
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h
+   NVM_SETF_SAVE = 1
+   NVM_SETF 0D4h,TempTest
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MTChk = (idata[0]&0ffffh)
+   if (MTChk == 0 || MTChk == MT2Val)
+      prnf "           Abort"
+      MTResult[0] = 1
+   elseif (MTChk > MT2Val)
+      prnf "        Success "
+      MTResult[0] = 0
+   endif
+   TempVal[3] = MT2Val-2
+   prnf "       %dC",TempVal[3]-273
+   TempTest = (TempVal[1]<<16) + TempVal[3]
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h
+   NVM_SETF_SAVE = 1
+   NVM_SETF 0D4h,TempTest
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MTChk = (idata[0]&0ffffh)
+
+   if (MTChk == 0 || MTChk == MT2Val)
+      prnf "           Abort"
+      MTResult[1] = 0
+   elseif (MTChk < MT2Val)
+      prnf "        Success "
+      MTResult[1] = 1
+   endif
+   if (MTResult[0] == 1 && MTResult[1] == 1)
+      CsvCheckPoint[112] = 1
+      prnf "       Pass"
+   else
+      CsvCheckPoint[112] = 0
+      prnf "       Fail***"
+      ErrCnt+=1
+      if (MTResult[0] == 0 && MTResult[1] == 1)
+         prnf "\n      +++++ Fail: Set Temp value greater than device temp value command response should be = 'Abort'"
+         prnf "\n"
+         prnf "\n"
+      else
+         prnf "\n      +++++ Fail: Set Temp value less than device temp value command response should be = 'Complete'"
+         prnf "\n"
+         prnf "\n"
+      endif
+   endif
+   prns "\n"
+   prns "\n"
+   prns "\n   @SubCase 1 : Test HD-DITM Not Persistence on Power Cycle"
+   prns "\n    Setp                               MT1   MT2   Result   "
+   prnf "\n    ========================================================"
+   NVM_GETF_SEL = 1
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MT1Val = (idata[0]>>16)
+   MT2Val = (idata[0]&0ffffh)
+   prnf "\n    Default Temperature (GetF)     "
+   prnf "    %dC",MT1Val-273
+   prnf "   %dC",MT2Val-273
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MT1Current = (idata[0]>>16)
+   MT2Current = (idata[0]&0ffffh)
+   prnf "\n    Current Temperature (SetF SV=1)"
+   prnf "    %dC",MT1Current-273
+   prnf "   %dC",MT2Current-273
+   prnf "\n    Power Cycle..."
+   Pwoff
+   wait 1000
+   Pwon
+   wait 1000
+   pinit
+   nvm_idfy
+   nvm_cmd_nsid = 0
+   NVM_GETF_SEL = 0
+   NVM_GETF 0D4h;
+   idata[0] = NVM_CQE_DW0
+   MT1Current = (idata[0]>>16)
+   MT2Current = (idata[0]&0ffffh)
+   prnf "\n    Current Temperature (GetF)     "
+   prnf "    %dC",MT1Current-273
+   prnf "   %dC",MT2Current-273
+   if (MT1Current == MT1Val && MT2Current == MT2Val )
+      CsvCheckPoint[113] = 1
+      prnf "   Pass"
+   else
+      CsvCheckPoint[113] = 0
+      prnf "   Fail***"
+      ErrCnt+=1
+      prnf "\n      +++++ Fail: Current Temperature should be restore to Default Temperature"
+      prnf "\n"
+      prnf "\n"
+   endif
+endif
+
+
+//csv save
+exportFile csvFile //Send output to csv
+prnf "\n"
+if (CsvCheckPoint[1101] == 1 && CsvCheckPoint[1102] == 1 && CsvCheckPoint[111] == 1 && CsvCheckPoint[112] == 1 && CsvCheckPoint[113] == 1)
+   prnf "\nDell HD-DITM Temperature Settings:, PASS"
+elseif (CsvCheckPoint[1101] == 2 && CsvCheckPoint[1102] == 2 && CsvCheckPoint[111] == 2 && CsvCheckPoint[112] == 2 && CsvCheckPoint[113] == 2)
+   prnf "\nDell HD-DITM Temperature Settings:, NS"
+   goto exitTEST; 
+else
+   prnf "\nDell HD-DITM Temperature Settings:, FAIL"
+endif
+
+if (CsvCheckPoint[1101] == 1)
+   prnf "\n MT1 compare:, PASS"
+else
+   prnf "\n MT1 compare:, FAIL"
+endif
+
+if (CsvCheckPoint[1102] == 1)
+   prnf "\n MT2 Compare:, PASS"
+else
+   prnf "\n MT2 Compare:, FAIL"
+endif
+
+if (CsvCheckPoint[111] == 1)
+   prnf "\n MT1 Temp Setting:, PASS"
+else
+   prnf "\n MT1 Temp Setting:, FAIL"
+endif
+
+if (CsvCheckPoint[112] == 1)
+   prnf "\n MT2 Temp Setting:, PASS"
+else
+   prnf "\n MT2 Temp Setting:, FAIL"
+endif
+
+if (CsvCheckPoint[113] == 1)
+   prnf "\n Test HD-DITM Not Persistence on Power Cycle:, PASS"
+else
+   prnf "\n Test HD-DITM Not Persistence on Power Cycle:, FAIL"
+endif
+exitMTTest:
+exitTEST:
+Endtest:
+endexport
+
+prns "";
+prns "";
+RunTm=Timer3
+prns ""
+prns ""
+prnsr "Script End "; date
+prnsr "Script End "; time
+prns ""
+prnsr "   total run time        :  "; prntm RunTm/1000
+prnf  "     (%I64u milli-seconds)\n", RunTm
+prnf  "   total # of errors     : %10lu\n", ErrCnt
+prns ""
+v99 = LogPath + TestCaseName + ".log"
+log v99
+prns ""; prns "The test result can be found in"
+prnf "    Log File: "; prns v99
+prnf "    Csv File: "; prns csvfile
+exportFile v99
+exportFile csvFile
+prns "";
+prns "";
+prns " "
+prnf "Script End "; Date; time
+prns ""
+prnsr "Total Runtime: "; prntm (microsecond-RunTime)/1000000
+endExport
+end
