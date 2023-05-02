@@ -21,6 +21,8 @@ dim PersistentFMT[100], PersistentNSID, PersistentFMTCDW, PersistentStaF, Persis
 dim PersistentTime, PersistentMill, DellMT1, DellMT2, checkGen, bootszie, bootSpt, MNTMT, MXTMT, DegressMNTMT, DegressMXTMT
 dim TestReportName, TestCaseName, TestSwName, TestSwVer, TmpNSID1, iftype, rellogpath, ostype, osver, TotDataW, ShortInfo, HAIC, ANOPSC
 
+//hello
+//test
 
 include "tcg_psidspt_a.ens"
 include "DellSpecInfo_cfg.txt"
